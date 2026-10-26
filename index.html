@@ -295,7 +295,7 @@ function seedProfiles(adminEmail){
     mk("alejandro",{nombre:"Alejandro",email:adminEmail||"",sexo:"h",nac:"1984-03-15",edad:42,estatura:167,peso:92,objetivo:"bajar",pesoMeta:85,fechaMeta:ymd(meta),inicioPeso:92,inicioFecha:today,plan:"nutri",dias:6,familia:true,grupo:"fuera",pendiente:false}),
     mk("claudia",{nombre:"Claudia",email:"",sexo:"m",nac:"",edad:"",estatura:"",peso:"",objetivo:"bajar",pesoMeta:"",fechaMeta:"",plan:"nutri",dias:3,familia:true,grupo:"casa",pendiente:true}),
     mk("jahir",{nombre:"Jahir",email:"",sexo:"h",nac:"",edad:24,estatura:"",peso:"",objetivo:"mantener",boxeo:true,pesoMant:56,pesoPelea:52,fechaPelea:"",pesoMeta:"",fechaMeta:"",plan:"nutri",dias:4,familia:true,grupo:"fuera",pendiente:true}),
-    mk("alexia",{nombre:"Alexia",email:"",sexo:"m",nac:"",edad:17,estatura:"",peso:"",objetivo:"crecer",plan:"bal",dias:3,familia:true,grupo:"casa",pendiente:true}),
+    mk("alexia",{nombre:"Alexia",email:"",sexo:"m",nac:"",edad:17,estatura:"",peso:"",objetivo:"ganar",plan:"bal",dias:3,familia:true,grupo:"casa",pendiente:true}),
     mk("alexito",{nombre:"Alexito",email:"",sexo:"h",nac:"",edad:8,estatura:"",peso:"",objetivo:"crecer",plan:"bal",dias:5,familia:true,grupo:"casa",pendiente:true})
   ];
 }
@@ -323,6 +323,7 @@ function age(info){
 }
 const isMinor=info=>{const a=age(info);return a>0&&a<18};
 const isKid=info=>{const a=age(info);return a>0&&a<13};
+const isTeenGym=info=>isMinor(info)&&age(info)>=16&&(info.objetivo==="ganar"||info.objetivo==="mantener");
 function canEditInfo(p){return S.mode==="local"||S.admin}
 function canSeeProgress(p){if(S.mode==="local"||S.admin)return true;const e=(S.me&&S.me.email)||"";return p.info.email===e||(p.info.familia&&!p.info.email&&S.inFamily)}
 function canRecord(p){if(S.mode==="local"||S.admin)return true;const e=(S.me&&S.me.email)||"";return p.info.email===e||(p.info.familia&&!p.info.email&&S.inFamily)}
@@ -636,10 +637,11 @@ function rx(id,mode,long,teen){
   if(id==="pinza")return series+" series × 30 s";
   return series+" series × "+(teen?"12":reps)+" reps";
 }
-function exCard(item,label,prescr,swIdx){
+const CLU_V=["w:S_Ub0GxDpmM","w:5iO1vdzSYmE"];
+function exCard(item,label,prescr,swIdx,note){
   const e=EX[item.id];
   return `<div class="ex"><div><div class="pic" data-pic="${item.id}">${body(e[1])}</div><label class="lnk">Agregar imagen<input type="file" accept="image/*" data-exup="${item.id}" hidden></label></div>
-  <div><div class="num">${label}</div><h4>${esc(e[0])}</h4><div class="rx">${esc(prescr)}</div><div class="mus">${e[1].map(m=>MUS[m]).join(" · ")}</div>
+  <div><div class="num">${label}</div><h4>${esc(e[0])}</h4><div class="rx">${esc(prescr)}</div><div class="mus">${e[1].map(m=>MUS[m]).join(" · ")}</div>${note||""}
   <div class="acts"><div class="vids">${vidsHTML(item.id)}</div>${swIdx!=null?`<button class="btn sm" data-sw="${swIdx}">⇄ Cambiar ejercicio</button>`:""}</div></div></div>`;
 }
 function fixedEx(n,ms,p,label){
@@ -719,13 +721,16 @@ function renderTrain(){
   <div class="chips" role="group" aria-label="Formato"><button class="chip" data-m="fuerza" aria-pressed="${st.mode==="fuerza"}">Fuerza · biseries</button><button class="chip" data-m="mixta" aria-pressed="${st.mode==="mixta"}">Fuerza mixta · triseries</button><button class="chip" data-m="circuito" aria-pressed="${circ}">Circuito</button></div>
   <div class="meta"><span>Rutina: <b>${esc(TS.groups.map(g=>G[g].t).join(" + "))}</b></span><span>Ejercicios: <b>${items.length+1}</b></span><span>Duración: <b>~${Math.round(mins/5)*5} min</b></span><span>Vigente hasta el <b>${blockEnd.getUTCDate()} de ${MESES[blockEnd.getUTCMonth()]}</b></span></div>
   <div class="motiv"><small>Antes de empezar</small>${esc(motiv)}</div>
-  <div class="rule glass">${circ?"Circuito: todos los ejercicios seguidos y <b>con el mismo peso en todas las vueltas</b>; descansa 90–120 s al terminar cada vuelta.":st.mode==="fuerza"?"Biseries: dos ejercicios seguidos sin descanso; al terminar, descansa 60–90 s.":"Triseries: tres ejercicios seguidos sin descanso; al terminar, descansa 90–120 s."} ${long?"4 series de 10 a 12 repeticiones.":"3 series de 10 repeticiones."}${teen?" Peso moderado: debes poder hacer 2 repeticiones más con buena técnica.":""}</div>`;
+  <div class="rule glass">${circ?"Circuito: todos los ejercicios seguidos y <b>con el mismo peso en todas las vueltas</b>; descansa 90–120 s al terminar cada vuelta.":st.mode==="fuerza"?"Biseries: dos ejercicios seguidos sin descanso; al terminar, descansa 60–90 s.":"Triseries: tres ejercicios seguidos sin descanso; al terminar, descansa 90–120 s."} ${long?"4 series de 10 a 12 repeticiones.":"3 series de 10 repeticiones."}${circ?"":" El primer ejercicio del bloque 1, 3 y 5 va en series de 10 + 10 + 10."}${teen?" Peso moderado: debes poder hacer 2 repeticiones más con buena técnica.":""}</div>`;
   html+=`<div class="glass block"><div class="bhead"><h3>Calentamiento</h3><span>Peso ligero</span></div>${exCard(items[0],"Ejercicio 1","2 series × 15 reps ligeras",null)}</div>`;
   let p=0,n=1;
   lay.forEach((size,bi)=>{const chunk=items.slice(p,p+size);const off=p;p+=size;
     const title=circ?"Circuito "+(bi+1):(size===2?"Biserie ":"Triserie ")+(bi+1);
     const sub=circ?CIRC[st.time].r+" vueltas · mismo peso":"Sin descanso entre ejercicios";
-    html+=`<div class="glass block"><div class="bhead"><h3>${title}</h3><span>${sub}</span></div>`+chunk.map((it,j)=>exCard(it,"Ejercicio "+(++n),rx(it.id,st.mode,long,teen),off+j)).join("")+
+    html+=`<div class="glass block"><div class="bhead"><h3>${title}</h3><span>${sub}</span></div>`+chunk.map((it,j)=>{const clu=!circ&&j===0&&bi%2===0&&!ABS.has(it.id)&&!/^(enc_|granjero|pinza)/.test(it.id);
+      const pr=clu?series+" series de 10 + 10 + 10 reps":rx(it.id,st.mode,long,teen);
+      const note=clu?`<div class="pair" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);border-radius:10px;padding:6px 9px">10 reps, descansas 10 s, 10 reps, descansas 10 s, 10 reps: eso es <b>una serie</b>. Mismo peso en todas. ${CLU_V.map((v,i)=>`<a href="${vurl(v)}" target="_blank" rel="noopener">Ejemplo ${i+1}</a>`).join(" ")}</div>`:"";
+      return exCard(it,"Ejercicio "+(++n),pr,off+j,note)}).join("")+
     `<div class="restline">${circ?"Sin descanso entre ejercicios; 90–120 s al terminar la vuelta":size===2?"Al terminar la biserie descansa 60–90 s":"Al terminar la triserie descansa 90–120 s"}</div></div>`;
   });
   if(long)html+=`<div class="glass block"><div class="bhead"><h3>Cardio final</h3><span>Quema de grasa</span></div>${fixedEx("Caminadora o escaladora",["cardio"],"25 min: correr, caminar inclinado o escaladora","Ejercicio "+(++n))}</div>`;
@@ -963,7 +968,8 @@ const LIBRE={c:["Comida libre","Disfruta lo que quieras con medida: una porción
 function lastPeso(p){p=p||P();const m=(p.medidas||[]).filter(r=>+r.peso>0).sort((a,b)=>a.f<b.f?1:-1);return m.length?+m[0].peso:(+p.info.peso||0)}
 function calc(p){
   p=p||P();const i=p.info;const w=lastPeso(p),h=+i.estatura,a=age(i);
-  if(!w||!h||!a||isMinor(i))return null;
+  if(!w||!h||!a)return null;
+  if(isMinor(i)&&!isTeenGym(i))return null;
   const bmr=10*w+6.25*h-5*a+(i.sexo==="m"?-161:5);
   const base=bmr*1.3,floor=i.sexo==="m"?1200:1500;
   let def=0,need=0,cap=w*.01*7700/7,kg=0,daysLeft=0,capHit=false;
@@ -986,10 +992,10 @@ function calc(p){
   const realDef=Math.max(0,base-meta)+.5*400*(+i.dias||4)/7;
   const weeksProj=kg&&realDef?kg*7700/(realDef*7):0;
   const proj=new Date(now);proj.setDate(proj.getDate()+Math.round(weeksProj*7));
-  return{w,bmr,base,meta,def,need,cap,kg,daysLeft,capHit,floorHit,weeksProj,proj,prot:Math.round(w*(i.objetivo==="bajar"?1.8:1.6))};
+  return{w,bmr,base,meta,def,need,cap,kg,daysLeft,capHit,floorHit,weeksProj,proj,prot:Math.round(w*(i.objetivo==="bajar"||i.objetivo==="ganar"?1.8:1.6))};
 }
 /* Porción de cada persona respecto al plato base de un adulto */
-function pfac(p){const i=p.info;if(isKid(i))return .6;if(isMinor(i))return i.sexo==="m"?.85:1;const c=calc(p);return c?Math.min(1.3,Math.max(.7,Math.round(c.meta/1700*20)/20)):1}
+function pfac(p){const i=p.info;if(isKid(i))return .6;const c=calc(p);if(c)return Math.min(1.3,Math.max(.7,Math.round(c.meta/1700*20)/20));if(isMinor(i))return i.sexo==="m"?1:.85;return 1}
 const QUNITS="gramos|g|tortillas?|tostadas?|huevos?|claras?|tazas?|taza|reb\\.?|rebanadas?|cdas?|cdtas?|cucharadas?|piezas?|pza\\.?|filetes?|latas?|sobres?|paquetes?|barras?|barritas?|aguacates?|panes?|pan|salchichas?|rollitos?|galletas?|doraditas?|hot cakes|totopos|chuletas?|brownies|albóndigas|de taza|de pieza|de aguacate|de pza\\.?";
 const QRE=new RegExp("(\\d+(?:[.,]\\d+)?(?:\\/\\d+)?|½|¼|¾)(\\s*(?:a|–|-)\\s*(\\d+(?:[.,]\\d+)?))?(\\s+)("+QUNITS+")(?![a-záéíóúñ])","gi");
 function qparse(s){if(s==="½")return .5;if(s==="¼")return .25;if(s==="¾")return .75;if(s.includes("/")){const [a,b]=s.split("/");return +a/+b}return parseFloat(s.replace(",","."))}
@@ -1036,7 +1042,7 @@ function renderHoy(){
   html+=kid?`<div class="hero glass"><div class="k">Hoy toca</div><h1>60 min de juego</h1><p>Futbol, bici, alberca o juegos de correr.</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver ideas</button></div>`
     :gs?`<div class="hero glass"><div class="k">Hoy toca</div><h1>${gs.map(g=>G[g].t).join(" + ")}</h1><p>Elige cuánto tiempo tienes y tu rutina queda lista.</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver mi rutina</button></div>`
     :`<div class="hero glass"><div class="k">Hoy toca</div><h1>Descanso</h1><p>Recupera y duerme bien. Si quieres moverte: correr, caminadora o futbol.</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver opciones</button></div>`;
-  const meals=kid||minor?MK_KID:MK;
+  const meals=kid||(minor&&!c)?MK_KID:MK;
   if(c){
     const mDay=c.meta+Math.round((h.quem||0)*(c.add!=null?c.add:.5));
     const comido=Object.values(h.ate||{}).reduce((a,b)=>a+(+b||0),0)+(h.extra||0)+(h.cerv||0)*155;
@@ -1044,13 +1050,13 @@ function renderHoy(){
     html+=`<div class="sec"><h2>Calorías de hoy</h2><span class="note">Aproximadas</span></div>
     <div class="card glass"><div class="krow"><div><div class="small">Meta</div><div class="v">${fmt(mDay)}</div></div><div><div class="small">Llevas</div><div class="v">${fmt(comido)}</div></div><div><div class="small">${rest>=0?"Te quedan":"Te pasaste"}</div><div class="v" style="color:${rest>=0?"var(--ink)":"var(--bad)"}">${fmt(Math.abs(rest))}</div></div></div>
     <div class="bar"><i style="width:${Math.min(100,comido/mDay*100)}%"></i></div>
-    <p class="small" style="margin:10px 0 0">${c.box?(c.mode==="prep"?`Preparación de pelea: faltan ${c.fd} días. Bajar de ${f1(c.w)} a ${f1(c.pp)} kg solo con grasa, cuidando el músculo`:`Mantenimiento en ${f1(c.pm)} kg (hoy ${f1(c.w)} kg); peso de pelea ${f1(c.pp)} kg`):i.objetivo==="bajar"&&+i.pesoMeta?`Para ir de ${f1(c.w)} a ${f1(+i.pesoMeta)} kg`:"Calculada con tu peso, estatura y edad"}. Proteína: ${c.prot} g al día.${h.quem?(c.add===1?` Sumamos las ${fmt(h.quem)} kcal que quemaste.`:c.add===.75?` Sumamos el 75 % de las ${fmt(h.quem)} kcal que quemaste.`:` Sumamos la mitad de las ${fmt(h.quem)} kcal que quemaste.`):""}${h.cerv?` Incluye ${h.cerv} ${h.cerv===1?"cerveza":"cervezas"}.`:""}</p>
+    <p class="small" style="margin:10px 0 0">${minor?"Para ganar músculo sin dietas restrictivas: un poco más de lo que gastas y suficiente proteína":c.box?(c.mode==="prep"?`Preparación de pelea: faltan ${c.fd} días. Bajar de ${f1(c.w)} a ${f1(c.pp)} kg solo con grasa, cuidando el músculo`:`Mantenimiento en ${f1(c.pm)} kg (hoy ${f1(c.w)} kg); peso de pelea ${f1(c.pp)} kg`):i.objetivo==="bajar"&&+i.pesoMeta?`Para ir de ${f1(c.w)} a ${f1(+i.pesoMeta)} kg`:"Calculada con tu peso, estatura y edad"}. Proteína: ${c.prot} g al día.${h.quem?(c.add===1?` Sumamos las ${fmt(h.quem)} kcal que quemaste.`:c.add===.75?` Sumamos el 75 % de las ${fmt(h.quem)} kcal que quemaste.`:` Sumamos la mitad de las ${fmt(h.quem)} kcal que quemaste.`):""}${h.cerv?` Incluye ${h.cerv} ${h.cerv===1?"cerveza":"cervezas"}.`:""}</p>
     ${can?`<div class="line" style="margin-top:8px"><label class="fl" style="flex:1">Calorías que quemé entrenando<div class="inl"><input type="number" id="quem" inputmode="numeric" min="0" step="10" placeholder="Ej. 450" value="${h.quem||""}"><button class="btn primary" id="quemOk">Guardar</button></div></label></div>`:""}</div>`;
   }else if(!minor)html+=`<div class="card glass"><b>Completa tus datos</b><p class="small">Con edad, estatura y peso calculo tus calorías y tus porciones.</p></div>`;
   html+=`<div class="sec"><h2>${p.id===myProfileId()?"Tu menú":"Menú de "+esc(i.nombre)}</h2>${f!==1?`<span class="tag c">Porción ×${f1(f)}</span>`:""}</div>`;
   html+=mealsHTML(meals,p,h,f,can,!!c);
   if(c&&can)html+=`<div class="card glass"><b>¿Comiste algo más?</b><div class="acts"><button class="btn sm" data-extra="60">+ Fruta 60</button><button class="btn sm" data-extra="40">+ Café con leche 40</button><button class="btn sm" data-extra="100">+ 100 kcal</button>${h.extra?`<button class="btn sm ghost" data-extra="0">Quitar extras</button>`:""}</div></div>`;
-  if(minor)html+=`<div class="card glass"><p class="small" style="margin:0">A esta edad no se hacen dietas para bajar de peso: come el mismo platillo de la familia en su porción, con verduras, fruta, proteína y agua.</p></div>`;
+  if(minor&&!c)html+=`<div class="card glass"><p class="small" style="margin:0">A esta edad no se hacen dietas para bajar de peso: come el mismo platillo de la familia en su porción, con verduras, fruta, proteína y agua.</p></div>`;
   if(i.familia&&(S.mode==="local"||S.inFamily))html+=familyMenuHTML();
   html+=`<div class="card glass"><b>Para el estrés</b><p class="small" style="margin:4px 0 0">${TIPS[dayIdx%TIPS.length]}</p></div>`;
   $("#v-hoy").innerHTML=html;wireHoy(h);
@@ -1116,19 +1122,22 @@ function wireHoy(h){
 
 /* ---------- Hábitos ---------- */
 const privMsg=()=>`<div class="card glass" style="margin-top:16px"><b>Esto es personal</b><p class="small" style="margin:4px 0 0">Los hábitos y el progreso de ${esc(I().nombre)} solo los ve esa persona y el administrador. En Hoy puedes ver su menú.</p></div>`;
-function weekendBeers(p){const d=new Date(now);const sat=new Date(d);sat.setDate(d.getDate()-((d.getDay()+1)%7));const sun=new Date(sat);sun.setDate(sat.getDate()+1);return getDay(ymd(sat),p).cerv+getDay(ymd(sun),p).cerv}
+let habDate=today;
+function weekendBeers(p,d0){const d=d0?new Date(d0):new Date(now);const sat=new Date(d);sat.setDate(d.getDate()-((d.getDay()+1)%7));const sun=new Date(sat);sun.setDate(sat.getDate()+1);return getDay(ymd(sat),p).cerv+getDay(ymd(sun),p).cerv}
 function renderHab(){
   if(!canSeeProgress(P())){$("#v-habitos").innerHTML=privMsg();return}
-  const p=P(),i=p.info,h=getDay(today),minor=isMinor(i),can=canRecord(p);
+  if(habDate>today)habDate=today;
+  const p=P(),i=p.info,K=habDate,KD=parseYmd(K),h=getDay(K),minor=isMinor(i),can=canRecord(p),isT=K===today;
   const metaC=+p.settings.metaCerv||6;
   const ml=h.agua*500,ok=h.agua>=4;
   let w="";for(let k=6;k>=0;k--){const d=new Date(now);d.setDate(d.getDate()-k);const a=getDay(ymd(d),p).agua;const fut=false;w+=`<div><div class="e">${a>=4?"🎉":a>0?"😟":"·"}</div>${DIAS[d.getDay()].slice(0,2)}</div>`}
-  const wb=weekendBeers(p);
-  let html=`<div class="hero glass" style="padding:16px 18px"><div class="k">Hábitos de hoy</div><h1 style="font-size:1.6rem">${fechaLarga(now)}</h1></div>
+  const wb=weekendBeers(p,KD);
+  let html=`<div class="hero glass" style="padding:16px 18px"><div class="k">${isT?"Hábitos de hoy":"Editando un día anterior"}</div><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px"><button class="btn sm" id="dPrev" aria-label="Día anterior">‹</button><h1 style="font-size:1.45rem;text-align:center">${fechaLarga(KD)}</h1><button class="btn sm" id="dNext" aria-label="Día siguiente" ${isT?"disabled":""}>›</button></div>${isT?"":`<div class="acts" style="justify-content:center"><button class="btn sm primary" id="dHoy">Volver a hoy</button></div>`}</div>
   <div class="card glass"><div class="line"><b>Bebidas</b><span class="small">Marca lo que tomaste</span></div>
     <div class="row3"><label class="tick badx"><input type="checkbox" id="hRef" ${h.refresco?"checked":""} ${can?"":"disabled"}>Refresco</label><label class="tick"><input type="checkbox" id="hMin" ${h.mineral?"checked":""} ${can?"":"disabled"}>Agua mineral</label><label class="tick"><input type="checkbox" id="hAgu" ${h.aguaNat?"checked":""} ${can?"":"disabled"}>Agua</label></div>
-    <div class="line" style="margin-top:6px"><b>Cumplí la dieta hoy</b><div class="yn"><label class="tick"><input type="checkbox" data-yn="dieta" data-val="1" ${h.dieta===true?"checked":""} ${can?"":"disabled"}>Sí</label><label class="tick badx"><input type="checkbox" data-yn="dieta" data-val="0" ${h.dieta===false?"checked":""} ${can?"":"disabled"}>No</label></div></div>
-    <div class="line"><b>Entrené hoy</b><div class="yn"><label class="tick"><input type="checkbox" data-yn="ent" data-val="1" ${h.ent===true?"checked":""} ${can?"":"disabled"}>Sí</label><label class="tick badx"><input type="checkbox" data-yn="ent" data-val="0" ${h.ent===false?"checked":""} ${can?"":"disabled"}>No</label></div></div>
+    <div class="line" style="margin-top:6px"><b>${isT?"Cumplí la dieta hoy":"Cumplí la dieta"}</b><div class="yn"><label class="tick"><input type="checkbox" data-yn="dieta" data-val="1" ${h.dieta===true?"checked":""} ${can?"":"disabled"}>Sí</label><label class="tick badx"><input type="checkbox" data-yn="dieta" data-val="0" ${h.dieta===false?"checked":""} ${can?"":"disabled"}>No</label></div></div>
+    <div class="line"><b>${isT?"Entrené hoy":"Entrené"}</b><div class="yn"><label class="tick"><input type="checkbox" data-yn="ent" data-val="1" ${h.ent===true?"checked":""} ${can?"":"disabled"}>Sí</label><label class="tick badx"><input type="checkbox" data-yn="ent" data-val="0" ${h.ent===false?"checked":""} ${can?"":"disabled"}>No</label></div></div>
+    ${minor&&!isTeenGym(i)?"":`<div class="line"><label class="fl" style="flex:1">Calorías que quemé entrenando<div class="inl"><input type="number" id="hQuem" inputmode="numeric" min="0" step="10" placeholder="Ej. 450" value="${h.quem||""}" ${can?"":"disabled"}><button class="btn primary" id="hQuemOk" ${can?"":"disabled"}>Guardar</button></div></label></div>`}
   </div>
   <div class="sec"><h2>Agua</h2><span class="note">${(ml/1000).toLocaleString("es-MX")} L de 2 L o más</span></div>
   <div class="card glass"><div class="small">Cada vaso es de 500 ml. La línea verde marca tu meta de 2 litros.</div>
@@ -1137,13 +1146,17 @@ function renderHab(){
     <div class="week" aria-label="Agua de los últimos 7 días">${w}</div></div>`;
   if(!minor){
     html+=`<div class="sec"><h2>Cerveza</h2><span class="note">Solo fin de semana · meta ${metaC}</span></div>
-    <div class="card glass"><div class="counter"><button id="cm" aria-label="Quitar una" ${can?"":"disabled"}>−</button><div class="n">${h.cerv}</div><button id="cp" aria-label="Agregar una" ${can?"":"disabled"}>+</button><div><b>${fmt(h.cerv*155)} kcal hoy</b><div class="small">Este fin de semana: ${wb} de ${metaC}</div></div></div>
+    <div class="card glass"><div class="counter"><button id="cm" aria-label="Quitar una" ${can?"":"disabled"}>−</button><div class="n">${h.cerv}</div><button id="cp" aria-label="Agregar una" ${can?"":"disabled"}>+</button><div><b>${fmt(h.cerv*155)} kcal ${isT?"hoy":"ese día"}</b><div class="small">${isT?"Este":"Ese"} fin de semana: ${wb} de ${metaC}</div></div></div>
     <div class="bar"><i style="width:${Math.min(100,wb/metaC*100)}%;${wb>metaC?"background:var(--bad)":""}"></i></div>
-    ${!isWeekend(now)?`<p class="small" style="margin:10px 0 0">Hoy es entre semana: las cervezas solo están permitidas sábado y domingo.</p>`:""}
+    ${!isWeekend(KD)?`<p class="small" style="margin:10px 0 0">${isT?"Hoy es":"Ese día fue"} entre semana: las cervezas solo están permitidas sábado y domingo.</p>`:""}
     ${can?`<div class="chips" style="margin-top:12px">${[2,4,6].map(m=>`<button class="chip" data-meta="${m}" aria-pressed="${m===metaC}">Meta ${m}</button>`).join("")}</div>`:""}</div>`;
   }
-  $("#v-habitos").innerHTML=html;if(!can)return;
-  const save=()=>{saveDay(today,h);renderHab()};
+  $("#v-habitos").innerHTML=html;
+  const mv=n=>{const d=parseYmd(K);d.setDate(d.getDate()+n);habDate=ymd(d);renderHab()};
+  $("#dPrev").onclick=()=>mv(-1);$("#dNext").onclick=()=>{if(!isT)mv(1)};const dh=$("#dHoy");if(dh)dh.onclick=()=>{habDate=today;renderHab()};
+  if(!can)return;
+  const save=()=>{saveDay(K,h);renderHab()};
+  const qb=$("#hQuemOk");if(qb)qb.onclick=()=>{const x=parseFloat($("#hQuem").value);h.quem=isFinite(x)&&x>0?Math.round(x):0;save();toast("Calorías guardadas")};
   $("#hRef").onchange=e=>{h.refresco=e.target.checked;save();if(h.refresco)alarm("¡Refresco!","Marcaste refresco hoy. Cámbialo por agua mineral o agua natural para no frenar tu avance.")};
   $("#hMin").onchange=e=>{h.mineral=e.target.checked;save()};
   $("#hAgu").onchange=e=>{h.aguaNat=e.target.checked;save()};
@@ -1151,8 +1164,8 @@ function renderHab(){
   $$("[data-a]").forEach(b=>b.onclick=()=>{const n=+b.dataset.a;const was=h.agua>=4;h.agua=(h.agua===n?n-1:n);save();if(!was&&h.agua>=4)toast("🎉 ¡Meta de agua cumplida!")});
   const cp=$("#cp");if(cp){
     cp.onclick=()=>{h.cerv++;save();
-      if(!isWeekend(now))alarm("Hoy no es fin de semana","Las cervezas solo están permitidas sábado y domingo.");
-      else if(weekendBeers(p)>metaC)alarm("Pasaste tu meta de cerveza","Llevas "+weekendBeers(p)+" este fin de semana y tu meta es "+metaC+".")};
+      if(!isWeekend(KD))alarm(isT?"Hoy no es fin de semana":"Ese día no era fin de semana","Las cervezas solo están permitidas sábado y domingo.");
+      else if(weekendBeers(p,KD)>metaC)alarm("Pasaste tu meta de cerveza","Llevas "+weekendBeers(p,KD)+" ese fin de semana y tu meta es "+metaC+".")};
     $("#cm").onclick=()=>{h.cerv=Math.max(0,h.cerv-1);save()};
     $$("[data-meta]").forEach(b=>b.onclick=()=>{p.settings.metaCerv=+b.dataset.meta;saveSettings();renderHab()});
   }
@@ -1180,7 +1193,7 @@ function donut(n,d,label,grad){
 function rangeStats(p,dates){let n=0,d=0,e=0,dn=0,en=0;dates.forEach(k=>{if(k>today)return;n++;const h=getDay(k,p);if(h.dieta===true)d++;if(h.dieta===false)dn++;if(h.ent===true)e++;if(h.ent===false)en++});return{n,d,e,dn,en}}
 function renderProg(){
   if(!canSeeProgress(P())){$("#v-progreso").innerHTML=privMsg();return}
-  const p=P(),i=p.info,minor=isMinor(i),can=canRecord(p),c=calc(p);
+  const p=P(),i=p.info,can=canRecord(p),c=calc(p),teen=isTeenGym(i),minor=isMinor(i)&&!teen;
   let html="";
   /* Meta */
   if(!minor&&c&&c.box){
@@ -1200,9 +1213,10 @@ function renderProg(){
     <div class="bar"><i style="width:${pct}%"></i></div>
     ${c?`<p class="small" style="margin:10px 0 0">${c.capHit?`Bajar ${f1(c.kg)} kg en ${Math.round(c.daysLeft/7)} semanas pide más de 1 % de tu peso por semana, que es lo máximo recomendable para no perder músculo. Tu dieta está al ritmo seguro; a este ritmo llegarías cerca del ${fechaLarga(c.proj)}.`:c.weeksProj?`Con tu dieta de ${fmt(c.meta)} kcal y tus entrenamientos, llegarías cerca del ${fechaLarga(c.proj)}.`:""} Registra tu peso en Medidas cada semana para ajustar la dieta.</p>`:""}
     ${canEditInfo(p)?`<div class="acts"><button class="btn sm" data-edit="${p.id}">Cambiar meta</button></div>`:""}</div>`;
-  }else if(!minor&&canEditInfo(p)&&!i.boxeo){
+  }else if(!minor&&!teen&&canEditInfo(p)&&!i.boxeo){
     html+=`<div class="card glass" style="margin-top:16px"><b>Ponte una meta</b><p class="small">Por ejemplo: bajar de 92 a 85 kg en 2 meses. Con eso ajusto tu dieta.</p><button class="btn primary sm" data-edit="${p.id}">Definir meta</button></div>`;
   }
+  if(teen)html+=`<div class="hero glass goal"><div class="k">Mi objetivo</div><h1>Ganar <span class="grad-text">músculo</span></h1><p>Come completo con ${c?c.prot+" g de proteína al día":"buena proteína"}, entrena con buena técnica y registra tus medidas y fotos para ver tu avance.</p></div>`;
   /* Calendario */
   const start=mondayOf(new Date(cal.y,cal.m,1));
   let cells=["L","M","M","J","V","S","D"].map(x=>`<div class="dh" aria-hidden="true">${x}</div>`).join("");
@@ -1214,7 +1228,7 @@ function renderProg(){
   html+=`<div class="sec"><h2>Calendario</h2><span class="note"><span class="leg"><i style="background:var(--good)"></i>Dieta</span><span class="leg"><i style="background:var(--cyan);border-radius:2px"></i>Entreno</span><span class="leg"><i style="background:var(--bad)"></i>No</span></span></div>
   <div class="card glass"><div class="calnav"><button class="btn sm" id="mPrev" aria-label="Mes anterior">‹</button><h3>${cap(MESES[cal.m])} ${cal.y}</h3><button class="btn sm" id="mNext" aria-label="Mes siguiente" ${isNow?"disabled":""}>›</button></div>
   <div class="cal">${cells}</div>
-  <div class="line" style="margin-top:10px"><b>${fechaLarga(sdd)}</b><span class="small">Se llena solo desde Hábitos</span></div>
+  <div class="line" style="margin-top:10px"><b>${fechaLarga(sdd)}</b>${can?`<button class="btn sm" id="editDay">✏️ Editar este día</button>`:`<span class="small">Se llena solo desde Hábitos</span>`}</div>
   <div class="small">Dieta: <b style="color:${sd.dieta===true?"var(--good)":sd.dieta===false?"var(--bad)":"var(--muted)"}">${sd.dieta===true?"cumplida":sd.dieta===false?"no cumplida":"sin registro"}</b> · Entreno: <b style="color:${sd.ent===true?"var(--cyan)":sd.ent===false?"var(--bad)":"var(--muted)"}">${sd.ent===true?"sí":sd.ent===false?"no":"sin registro"}</b> · Agua: ${(sd.agua*500/1000).toLocaleString("es-MX")} L${minor?"":` · Cervezas: ${sd.cerv}`}</div></div>`;
   /* Gráficas */
   const last=new Date(cal.y,cal.m+1,0).getDate();
@@ -1255,6 +1269,7 @@ function renderProg(){
   $("#mPrev").onclick=()=>{cal.m--;if(cal.m<0){cal.m=11;cal.y--}renderProg()};
   $("#mNext").onclick=()=>{if(isNow)return;cal.m++;if(cal.m>11){cal.m=0;cal.y++}renderProg()};
   $$("[data-view]",v).forEach(b=>b.onclick=()=>{cal.view=b.dataset.view;renderProg()});
+  const ed=$("#editDay");if(ed)ed.onclick=()=>{habDate=cal.sel;show("habitos")};
   if(can){
     $("#mSave").onclick=()=>{const f=$("#mF").value||today;const rec={f};let any=false;MED.forEach(m=>{const x=parseFloat($("#m-"+m[0]).value);if(isFinite(x)&&x>0){rec[m[0]]=x;any=true}});
       if(!any)return toast("Escribe al menos una medida");p.medidas=(p.medidas||[]).filter(r=>r.f!==f);p.medidas.push(rec);saveMedidas();toast("Medidas guardadas");renderProg()};
@@ -1337,7 +1352,7 @@ function openEditor(id,isNew){
    <label class="fl">Estatura (cm)<input type="number" id="eEst" step="0.5" value="${esc(i.estatura)}"></label>
    <label class="fl">Peso actual (kg)<input type="number" id="ePeso" step="0.1" value="${esc(lastPeso(p)||i.peso)}"></label>
    <label class="fl">Días de ejercicio por semana<input type="number" id="eDias" min="0" max="7" value="${esc(i.dias)}"></label>
-   <label class="fl">Objetivo<select id="eObj"><option value="bajar" ${i.objetivo==="bajar"?"selected":""}>Bajar grasa sin perder músculo</option><option value="mantener" ${i.objetivo==="mantener"?"selected":""}>Mantenerme</option><option value="ganar" ${i.objetivo==="ganar"?"selected":""}>Ganar músculo</option></select></label>
+   <label class="fl">Objetivo<select id="eObj"><option value="bajar" ${i.objetivo==="bajar"?"selected":""}>Bajar grasa sin perder músculo</option><option value="mantener" ${i.objetivo==="mantener"?"selected":""}>Mantenerme</option><option value="ganar" ${i.objetivo==="ganar"?"selected":""}>Ganar músculo</option><option value="crecer" ${i.objetivo==="crecer"?"selected":""}>Crecer sano (niños)</option></select></label>
    <label class="fl">Desayuno y comida entre semana<select id="eGrupo"><option value="casa" ${i.grupo==="casa"?"selected":""}>En casa, igual que Claudia y los niños</option><option value="fuera" ${i.grupo!=="casa"?"selected":""}>Su propio menú</option></select></label>
    <label class="fl">Peso meta (kg)<input type="number" id="eMeta" step="0.1" value="${esc(i.pesoMeta)}"></label>
    <label class="fl">Fecha meta<input type="date" id="eFecha" value="${esc(i.fechaMeta)}"></label>
@@ -1347,7 +1362,7 @@ function openEditor(id,isNew){
   <div class="grid2" style="margin-top:10px"><label class="fl">Peso de mantenimiento (kg)<input type="number" id="ePM" step="0.1" value="${esc(i.pesoMant||"")}"></label><label class="fl">Peso de pelea (kg)<input type="number" id="ePP" step="0.1" value="${esc(i.pesoPelea||"")}"></label><label class="fl">Fecha de la próxima pelea<input type="date" id="eFP" value="${esc(i.fechaPelea||"")}"></label></div>
   <p class="small" style="margin:8px 0 0">Sin pelea cerca, la dieta lo mantiene en su peso de mantenimiento. Dos meses antes de la pelea cambia sola a preparación: bajar grasa sin perder músculo hasta su peso de pelea.</p></div>
   <label class="tick" style="margin-top:10px"><input type="checkbox" id="eFam" ${i.familia?"checked":""}>Es de la familia (puede ver y ser visto por la familia)</label>
-  <p class="small" id="eMsg">Para menores de 18 años no se usan metas de peso ni déficit de calorías: se arma un menú para crecer sano.</p>
+  <p class="small" id="eMsg">Para menores de 18 años no se usan metas de peso ni déficit de calorías. A partir de los 16 pueden elegir ganar músculo o mantenerse, con medidas y fotos.</p>
   <div class="acts"><button class="btn primary" id="edSave">Guardar</button></div>`;
   $("#sheet").classList.add("on");
   $$("[data-plus]",pn).forEach(b=>b.onclick=()=>{$("#eFecha").value=b.dataset.plus});
@@ -1358,7 +1373,7 @@ function openEditor(id,isNew){
     Object.assign(i,{nombre:v("#eNom")||"Sin nombre",email:v("#eMail").toLowerCase(),sexo:v("#eSex"),nac:v("#eNac"),edad:num("#eEdad"),estatura:num("#eEst"),dias:num("#eDias")||3,objetivo:v("#eObj"),grupo:v("#eGrupo"),pesoMeta:num("#eMeta"),fechaMeta:v("#eFecha"),familia:$("#eFam").checked,boxeo:$("#eBox").checked,pesoPelea:num("#ePP"),pesoMant:num("#ePM"),fechaPelea:v("#eFP")});
     const peso=num("#ePeso");
     if(peso&&peso!==lastPeso(p)){i.peso=peso;p.medidas=(p.medidas||[]).filter(r=>r.f!==today);p.medidas.push({f:today,peso});saveMedidas(p)}else if(peso)i.peso=peso;
-    if(isMinor(i)){i.objetivo="crecer";i.pesoMeta="";i.fechaMeta=""}
+    if(isMinor(i)){if(age(i)<16)i.objetivo="crecer";else if(i.objetivo==="bajar"||i.objetivo==="crecer")i.objetivo=i.objetivo==="crecer"?"crecer":"mantener";i.pesoMeta="";i.fechaMeta=""}
     if(i.pesoMeta&&(i.pesoMeta!==oldMeta||i.fechaMeta!==oldFecha||!i.inicioPeso)){i.inicioPeso=lastPeso(p)||i.peso;i.inicioFecha=today}
     i.pendiente=!(i.estatura&&i.peso&&age(i));
     if(isNew&&S.mode==="cloud"){FS.collection("profiles").doc(id).set(Object.assign({},i,{orden:p.orden||0})).catch(e=>toast("Sin permiso para crear perfiles"))}else saveInfo(p);
@@ -1373,13 +1388,13 @@ function header(){
   const p=P();if(!p)return;const i=p.info;
   $("#avTxt").textContent=(i.nombre||"?").slice(0,1).toUpperCase();
   $("#whoName").textContent=i.nombre||"Sin nombre";
-  $("#whoSub").textContent=(age(i)?age(i)+" años · ":"")+(isMinor(i)?"Crecer sano":i.boxeo?"Boxeador":i.objetivo==="bajar"?"Bajar grasa":i.objetivo==="ganar"?"Ganar músculo":"Mantenerse")+" · cambiar";
+  $("#whoSub").textContent=(age(i)?age(i)+" años · ":"")+(isMinor(i)&&!isTeenGym(i)?"Crecer sano":i.boxeo?"Boxeador":i.objetivo==="bajar"?"Bajar grasa":i.objetivo==="ganar"?"Ganar músculo":"Mantenerse")+" · cambiar";
   $("#fecha").textContent=fechaLarga(now);
 }
 function rerender(){if(!P())return;header();renderView(curView)}
 function renderView(v){if(v==="hoy")renderHoy();if(v==="entrenar")renderTrain();if(v==="habitos")renderHab();if(v==="progreso")renderProg();if(v==="guia")renderGuia()}
 function show(v,noRender){curView=v;VIEWS.forEach(x=>$("#v-"+x).classList.toggle("on",x===v));$$("nav.tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v?"page":"false"));if(!noRender&&P())renderView(v);window.scrollTo(0,0)}
-$$("nav.tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+$$("nav.tabs button").forEach(b=>b.onclick=()=>{if(b.dataset.v==="habitos")habDate=today;show(b.dataset.v)});
 $("#whoBtn").onclick=openSheet;
 (function init(){
   const start=(location.hash||"").slice(1);curView=VIEWS.includes(start)?start:"hoy";
