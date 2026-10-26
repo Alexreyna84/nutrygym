@@ -3,13 +3,13 @@
    2) Escribe tu correo en "admin".
    Este archivo no se cambia cuando actualizas index.html. */
 window.PLAN_CONFIG = {
-  admin: "TU-CORREO@gmail.com",
+  admin: "a.reynala15@gmail.com",
   firebase: {
-    apiKey: "PEGA-AQUI",
-    authDomain: "PEGA-AQUI",
-    projectId: "PEGA-AQUI",
-    storageBucket: "PEGA-AQUI",
-    messagingSenderId: "PEGA-AQUI",
-    appId: "PEGA-AQUI"
+    apiKey: "AIzaSyBA59JEFfTvHy5Fd6I7-cPtZBOWNRNKb_U",
+    authDomain: "nutrygym-24c11.firebaseapp.com",
+    projectId: "nutrygym-24c11",
+    storageBucket: "nutrygym-24c11.firebasestorage.app",
+    messagingSenderId: "1018568220600",
+    appId: "1:1018568220600:web:b84c6f29ec44d39aac394d"
   }
 };
