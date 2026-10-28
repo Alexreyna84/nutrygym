@@ -164,6 +164,19 @@ label.fl{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(-
 .mbtn b{display:block;font-size:.95rem}.mbtn small{color:var(--muted);font-size:.74rem}
 .mbtn:hover{border-color:rgba(255,59,59,.5)}
 .mbtn[aria-pressed="true"]{border-color:rgba(255,59,59,.8);background:linear-gradient(135deg,rgba(255,59,59,.18),rgba(168,85,247,.10));box-shadow:0 0 18px rgba(255,59,59,.3)}
+.daystrip{display:flex;gap:8px;margin:16px 0 4px;flex-wrap:wrap}
+.dayb{display:flex;flex-direction:column;align-items:center;min-width:72px;padding:8px 10px;border-radius:14px;border:1px solid var(--line);background:var(--glass);transition:all .22s ease}
+.dayb small{font-size:.72rem;color:var(--muted);font-weight:600}.dayb b{font-size:1.25rem}
+.dayb[aria-pressed="true"]{background:linear-gradient(var(--bg),var(--bg)) padding-box,var(--grad) border-box;border:1px solid transparent;box-shadow:0 0 18px rgba(139,92,246,.35)}
+details.more{margin-top:10px;border-top:1px dashed var(--line);padding-top:6px}
+details.more summary{padding:4px 0;font-size:.86rem;font-weight:600;color:var(--cyan)}details.more summary::after{content:"+";float:right}details.more[open] summary::after{content:"–"}
+.eqs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.eqb{text-align:left;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:12px;padding:8px 10px}
+.eqb b{display:block;font-size:.84rem}.eqb small{color:var(--muted);font-size:.74rem}.eqb:hover{border-color:rgba(34,211,238,.5)}
+ul.subs{margin:4px 0 0;padding-left:16px;font-size:.82rem;color:#CBD5E1}ul.subs li{margin:3px 0}
+details.shopcat{border-top:1px solid var(--line)}details.shopcat summary{padding:10px 0;font-weight:700}
+details.shopcat ul{list-style:none;margin:0 0 8px;padding:0}details.shopcat li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.06);font-size:.9rem}
+.mk i.pl{background:var(--violet);box-shadow:0 0 6px var(--violet)}
 .restline{padding:9px 14px;font-size:.82rem;color:var(--muted);border-top:1px dashed var(--line)}
 /* Hábitos */
 .glasses{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:12px}
@@ -403,7 +416,7 @@ function startCloud(){
     };
     const err=e=>console.warn(e);
     unsubs.push(FS.collection("videos").doc("custom").onSnapshot(d=>{S.cv=d.exists?d.data():{};if(curView==="entrenar")rerender()},err));
-    if(S.inFamily)unsubs.push(FS.collection("menu").doc("m-"+today.slice(0,7)).onSnapshot(d=>{Object.assign(S.fm,(d.exists&&d.data().days)||{});if(curView==="hoy")rerender()},err));
+    if(S.inFamily){const nm=new Date(now.getFullYear(),now.getMonth()+1,1);[today.slice(0,7),ymd(nm).slice(0,7)].forEach(m=>unsubs.push(FS.collection("menu").doc("m-"+m).onSnapshot(d=>{Object.assign(S.fm,(d.exists&&d.data().days)||{});if(curView==="hoy")rerender()},err)))}
     if(S.admin){
       unsubs.push(FS.collection("profiles").onSnapshot(async snap=>{
         if(snap.empty&&!seedProfiles.done){seedProfiles.done=true;const b=FS.batch();seedProfiles(S.me.email).forEach((p,i)=>b.set(FS.collection("profiles").doc(p.id),Object.assign({},p.info,{orden:i})));await b.commit().catch(err);return}
@@ -1267,11 +1280,54 @@ const NEW_N=[
 ["Calabacitas rellenas de carne","2 calabacitas rellenas con 100 g de carne molida y tomate|20 g de queso asadero gratinado",330,"x"]];
 const SNX=[["Nopales asados con limón y sal",40,"agua"],["1 huevo cocido con chile en polvo",75,"agua"],["1 taza de leche deslactosada light",90,"agua, o como café con leche"],["30 g de queso panela con pepino",80,"agua"],["Zanahoria y pepino con limón y chile",30,"agua"],["1 rebanada de pan integral de 45 kcal con panela",100,"agua"]];
 /* Cada día cambia el estilo del menú para dar variedad */
-const SPEC=[{id:"n",d:DES,c:COM,n:CEN},{id:"m",d:DES_M,c:COM_M,n:CEN_M},{id:"o",d:ORL_D,c:ORL_C,n:ORL_N},{id:"x",d:NEW_D,c:NEW_C,n:NEW_N}];
-const SPEC_TODAY=SPEC[dayIdx%4];
+/* ---------- Más platillos con ingredientes comunes (huevo, atún, pollo, carne magra, pavo, tortilla, pan, arroz, avena, papa, camote, yogur, panela, frijol) ---------- */
+const MAS_D=[
+["Avena horneada con plátano y yogur","1/2 taza de avena con 1 huevo, 1/2 plátano y canela, horneada|1 yogur griego natural",380,"y"],
+["Hot cakes de avena y claras","1/2 taza de avena, 3 claras y 1/2 plátano licuados|Miel sin azúcar|1 taza de leche light",360,"y"],
+["Huevo con jamón y papa","2 huevos y 2 rebanadas de jamón de pavo|1 papa chica cocida en cubos|Salsa al gusto",400,"y"],
+["Tacos de huevo con frijoles y panela","2 huevos revueltos|1/4 taza de frijoles|30 g de queso panela|2 tortillas de maíz",430,"y"],
+["Yogur griego con avena y fresas","1 taza de yogur griego natural|1/3 taza de avena|1 taza de fresas|Canela",330,"y"],
+["Sándwich de pavo y panela","2 rebanadas de pan integral|3 rebanadas de jamón de pavo|40 g de queso panela|Jitomate, lechuga y mostaza",310,"y"],
+["Camote asado con huevo","1 camote chico asado|2 huevos estrellados con poco aceite|Espinaca salteada",390,"y"],
+["Molletes de pollo","2 rebanadas de pan integral|1/4 taza de frijoles|80 g de pollo deshebrado|Pico de gallo",360,"y"],
+["Omelette de champiñones y panela","2 huevos y 2 claras con champiñones|40 g de queso panela|2 tortillas de maíz",380,"y"],
+["Licuado de avena con huevo cocido","1 taza de leche light, 1/3 taza de avena, 1/2 plátano y 1/2 taza de yogur griego|1 huevo cocido",420,"y"]];
+const MAS_C=[
+["Pollo al limón con arroz y brócoli","150 g de pechuga al limón|1/2 taza de arroz|Brócoli al vapor|1 cdta de aceite de oliva",450,"y"],
+["Carne magra con papa y ejotes","150 g de bistec o sirloin|1 papa mediana asada|Ejotes y ensalada verde",520,"y"],
+["Pescado con camote y ensalada","1 filete de pescado a la plancha|1 camote chico|Ensalada verde con limón",450,"y"],
+["Tacos de pollo con frijoles","150 g de pollo a la plancha|3 tortillas de maíz|1/3 taza de frijoles|Pico de gallo",560,"y"],
+["Bowl de atún con arroz","1 lata de atún en agua|1/2 taza de arroz|Pepino y zanahoria|1/4 de aguacate y limón",420,"y"],
+["Albóndigas de pollo en salsa de jitomate","150 g de pechuga molida en albóndigas|Salsa de jitomate con calabacita|1/2 taza de arroz",470,"y"],
+["Fajitas de res con pimientos","150 g de res en tiras|Pimientos y cebolla|3 tortillas de maíz",540,"y"],
+["Pechuga rellena de espinaca y panela","150 g de pechuga|Espinaca y 30 g de queso panela|1 camote chico",480,"y"],
+["Caldo de pollo con verduras y arroz","150 g de pollo|Zanahoria, calabaza y 1 papa chica|1/3 taza de arroz",430,"y"],
+["Hamburguesa en plato con papa al horno","150 g de carne molida 90/10|Lechuga y jitomate|1 papa chica al horno",470,"y"]];
+const MAS_N=[
+["Tostadas de atún con aguacate","1 lata de atún en agua|3 tostadas horneadas|1/4 de aguacate|Pico de gallo",330,"y"],
+["Quesadillas de panela con espinaca","3 tortillas de maíz|60 g de queso panela|Espinaca y salsa",360,"y"],
+["Ensalada de pollo con camote","120 g de pollo|Lechuga y pepino|1/2 camote chico|1 cdta de aceite de oliva",380,"y"],
+["Huevos a la mexicana con tortilla","2 huevos con tomate, cebolla y chile|2 tortillas de maíz",340,"y"],
+["Wrap de pavo y panela","2 tortillas de maíz|4 rebanadas de jamón de pavo|30 g de queso panela|Lechuga y jitomate",300,"y"],
+["Yogur griego con fruta y nueces","1 taza de yogur griego natural|1/2 taza de fresas|5 nueces",280,"y"],
+["Sopa de verduras con pollo","100 g de pollo deshebrado|Calabaza, zanahoria y ejotes|2 tostadas horneadas",290,"y"],
+["Molletes de frijol y panela","2 rebanadas de pan integral|1/4 taza de frijoles|40 g de queso panela|Pico de gallo",330,"y"],
+["Tacos de pescado a la plancha","1 filete de pescado|Repollo y pico de gallo|3 tortillas de maíz",400,"y"],
+["Papa rellena de atún","1 papa mediana al horno|1 lata de atún en agua|Pico de gallo|1 cda de yogur griego",330,"y"]];
+/* ---------- Snacks por tipo: [nombre, kcal, con qué acompañarlo, tipo] ---------- */
+const SN_PRO=[["Yogur griego natural (1 taza)",130,"agua","Proteína"],["1 lata de atún en agua con limón",120,"agua","Proteína"],["60 g de queso panela con pepino",110,"agua","Proteína"],["3 rebanadas de jamón de pavo enrolladas",90,"agua","Proteína"],["2 huevos cocidos",150,"agua","Proteína"],["90 g de requesón con canela",100,"agua","Proteína"],["Carne seca (25 g)",95,"agua","Proteína"]];
+const SN_MIX=[["Manzana con 1 cda de crema de cacahuate",190,"agua","Mixto"],["Yogur griego con fruta picada",160,"agua","Mixto"],["2 tostadas horneadas con atún",150,"agua","Mixto"],["Palomitas naturales (2 tazas)",60,"agua","Mixto"],["Fruta con 5 nueces",140,"agua","Mixto"],["1 rebanada de pan integral con panela y pavo",130,"agua","Mixto"],["Zanahoria y pepino con 2 cdas de hummus",110,"agua","Mixto"]];
+const SN_RAP=[["Barra alta en proteína",200,TEAC,"Rápido"],["Fruta individual (manzana, pera o naranja)",70,"agua","Rápido"],["Licuado de proteína con leche light",200,"es tu bebida","Rápido"],["Pepino y jícama con limón y chile",40,"agua","Rápido"],["Edamames (1/2 taza)",95,"agua","Rápido"],["Zanahorias baby con limón",35,"agua","Rápido"],["1 taza de leche light",90,"es tu bebida","Rápido"]];
+const SN_ALL=[...SNA,...ORL_S,...SNX,...SN_PRO,...SN_MIX,...SN_RAP];
+const SN_LIBRE=[...SNB,["Pepino y jícama con limón y chile",40,"agua","Rápido"],["Zanahorias baby con limón",35,"agua","Rápido"]];
+function snType(s){if(s[3])return s[3];return /yogur|atún|panela|jamón|huevo|carne seca|leche|requesón/i.test(s[0])?"Proteína":/ con /i.test(s[0])?"Mixto":"Rápido"}
+/* Cada día cambia el estilo del menú para dar variedad */
+const SPEC=[{id:"n",d:DES,c:COM,n:CEN},{id:"m",d:DES_M,c:COM_M,n:CEN_M},{id:"o",d:ORL_D,c:ORL_C,n:ORL_N},{id:"x",d:NEW_D,c:NEW_C,n:NEW_N},{id:"y",d:MAS_D,c:MAS_C,n:MAS_N}];
 const ALL_F=[...FUERA,...FUERA_M];
-function poolFor(mk){return SPEC_TODAY[mk]}
-function snackPool(mk){if(mk==="s2")return SNB;if(SPEC_TODAY.id==="o")return ORL_S;if(SPEC_TODAY.id==="x")return SNX;if(SPEC_TODAY.id==="m")return [SNA,ORL_S,SNX][dayIdx%3];return SNA}
+/* Contexto de un día (hoy o los siguientes) */
+function DC(k){const d=parseYmd(k),idx=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5),w=d.getDay();return{k,d,idx,dow:w,sat:w===6,sun:w===0,wk:w===6||w===0,spec:SPEC[idx%SPEC.length]}}
+function poolFor(mk,D){return D.spec[mk]}
+function snackPool(mk){return mk==="s2"?SN_LIBRE:SN_ALL}
 const LIBRE={c:["Comida libre","Disfruta lo que quieras con medida: una porción normal, sin repetir y sin picar después.",800,"l"],n:["Cena libre","Disfruta lo que quieras con medida: una porción normal, sin repetir y sin picar después.",800,"l"]};
 
 
@@ -1325,61 +1381,171 @@ function qfmt(n,unit){
 function sing(u){if(/^panes$/i.test(u))return "pan";if(/^(g|gramos|hot cakes)$/i.test(u))return u;return u.replace(/s$/i,"")}
 function scaleText(s,f){if(f===1)return s;return s.replace(QRE,(m,a,rng,b,sp,u)=>{const x=qfmt(qparse(a)*f,u),y=b?qfmt(qparse(b)*f,u):null;if(y===x)return x+sp+(x==="1"?sing(u):u);return x+(y?" a "+y:"")+sp+((x==="1"&&!y)?sing(u):u)})}
 
-/* ---------- Menú: qué platillo le toca a cada quien ---------- */
+/* ---------- Menú: qué platillo le toca a cada quien, cualquier día ---------- */
 const MK=[{k:"d",t:"Desayuno",h:"8:30 am",m:510},{k:"c",t:"Comida",h:"1:00 pm",m:780},{k:"s1",t:"Snack",h:"3:00 pm",m:900,snack:true},{k:"s2",t:"Snack libre",h:"7:00 pm",m:1140,snack:true},{k:"n",t:"Cena",h:"9:30 pm",m:1290}];
 const MK_KID=[MK[0],MK[1],{k:"s1",t:"Colación",h:"5:30 pm",m:1050,arr:SN_K,kid:true},MK[4]];
 const sat=dow===6,sun=dow===0,wkend=sat||sun;
-function scopeOf(mk,info){
+let HD=today;
+const addDays=(k,n)=>{const d=parseYmd(k);d.setDate(d.getDate()+n);return ymd(d)};
+function scopeOf(mk,info,D){
   if(!info.familia||!["d","c","n"].includes(mk))return null;
-  if(wkend||mk==="n")return "todos";
+  if(D.wk||mk==="n")return "todos";
   return info.grupo==="casa"?"casa":null;
 }
-const isLibre=mk=>(sat&&mk==="n")||(sun&&mk==="c");
-function familyPick(mk,scope){
-  const arr=poolFor(mk);
-  let base=(mk==="c"&&sat&&SPEC_TODAY.id==="n")?0:Math.floor(rng(hash("fam|"+scope+"|"+mk+"|"+dayIdx))()*arr.length);
-  const off=((S.fm[today]||{})[scope+mk])||0;return arr[(base+off)%arr.length];
+const isLibre=(mk,D)=>(D.sat&&mk==="n")||(D.sun&&mk==="c");
+function refOf(cat,item){for(const sp of SPEC){const i=sp[cat].indexOf(item);if(i>=0)return cat+":"+sp.id+":"+i}return null}
+function resolveRef(r){if(!r)return null;const [cat,sid,i]=r.split(":");const sp=SPEC.find(x=>x.id===sid);return sp&&sp[cat]&&sp[cat][+i]?{cat,item:sp[cat][+i]}:null}
+/* Variedad automática: no repite el mismo platillo de los 2 días anteriores */
+const PICK={};
+function autoPick(arr,key,D,depth){
+  const ck=key+"|"+D.k+"|"+(depth||0);if(PICK[ck])return PICK[ck];
+  const n=arr.length;let base=Math.floor(rng(hash(key+"|"+D.idx))()*n);
+  if(/^fam\|.*\|c$/.test(key)&&D.sat&&D.spec.id==="n")base=0;
+  let avoid=[];if((depth||0)<2){avoid=[1,2].map(b=>{const P2=DC(addDays(D.k,-b));const a2=key.includes("|s")?arr:(P2.spec[key.split("|").pop()]||arr);return autoPick(a2,key,P2,(depth||0)+1)[0]})}
+  let it=arr[base];for(let j=0;j<n;j++){const c=arr[(base+j)%n];if(!avoid.includes(c[0])){it=c;break}}
+  PICK[ck]=it;return it;
 }
-function dishFor(m,p,h){
+function shiftFrom(arr,item,off){if(!off)return item;const i=arr.indexOf(item);return arr[((i<0?0:i)+off)%arr.length]}
+function familyPick(mk,scope,D){
+  const fm=S.fm[D.k]||{};const sel=resolveRef(fm[scope+mk+"_sel"]);if(sel)return sel.item;
+  const arr=poolFor(mk,D);return shiftFrom(arr,autoPick(arr,"fam|"+scope+"|"+mk,D),fm[scope+mk]||0);
+}
+function dishFor(m,p,h,D){
   const i=p.info;
-  if(isLibre(m.k))return{item:LIBRE[m.k],libre:true,scope:i.familia?"todos":null};
-  const scope=scopeOf(m.k,i);
-  if(scope)return{item:familyPick(m.k,scope),scope};
-  if(m.k==="c"&&h.sinLonche){const F=ALL_F;return{item:F[(Math.floor(rng(hash("f"+dayIdx+p.id))()*F.length)+((h.off||{}).f||0))%F.length],fuera:true}}
-  const arr=poolFor(m.k);const base=(m.k==="c"&&wkend&&SPEC_TODAY.id==="n")?0:Math.floor(rng(hash(m.k+dayIdx+p.id))()*arr.length);
-  return{item:arr[(base+((h.off||{})[m.k]||0))%arr.length]};
+  if(isLibre(m.k,D))return{item:LIBRE[m.k],libre:true,scope:i.familia?"todos":null};
+  const scope=scopeOf(m.k,i,D);
+  if(scope)return{item:familyPick(m.k,scope,D),scope};
+  if(m.k==="c"&&h.sinLonche){const F=ALL_F;return{item:F[(Math.floor(rng(hash("f"+D.idx+p.id))()*F.length)+((h.off||{}).f||0))%F.length],fuera:true}}
+  const sel=resolveRef((h.sel||{})[m.k]);if(sel)return{item:sel.item};
+  const arr=poolFor(m.k,D);return{item:shiftFrom(arr,autoPick(arr,p.id+"|"+m.k,D),(h.off||{})[m.k]||0)};
 }
+function snackFor(m,p,h,D){const arr=m.kid?m.arr:snackPool(m.k);return shiftFrom(arr,autoPick(arr,p.id+"|"+m.k,D),(h.off||{})[m.k]||0)}
 function familyMembers(scope){return S.order.map(id=>S.profiles[id]).filter(p=>p&&p.info.familia&&(scope==="todos"||p.info.grupo==="casa"))}
+function mealsOf(p){const i=p.info;return isKid(i)||(isMinor(i)&&!calc(p))?MK_KID:MK}
 
-/* ---------- Hoy ---------- */
+/* ---------- Equivalentes y sustituciones ---------- */
+const isDC=it=>it[2]<=500&&/huevo|omelette|tostada|sándwich|lonche|quesadilla|mollete|yogur|avena|wrap|hot cakes|pan /i.test(it[0]+" "+it[1]);
+function equivalents(cat,item,D){
+  if(!["d","c","n"].includes(cat)||!item||item[3]==="l")return[];
+  const k=item[2],out=[];
+  SPEC.forEach(sp=>sp[cat].forEach((it,i)=>{if(it!==item&&Math.abs(it[2]-k)<=k*.2)out.push({ref:cat+":"+sp.id+":"+i,it})}));
+  const other=cat==="d"?"n":cat==="n"?"d":null;
+  if(other&&isDC(item))SPEC.forEach(sp=>sp[other].forEach((it,i)=>{if(isDC(it)&&Math.abs(it[2]-k)<=k*.2)out.push({ref:other+":"+sp.id+":"+i,it,swap:true})}));
+  const r=rng(hash(item[0]+D.idx));out.sort(()=>r()-.5);
+  const seen=new Set();return out.filter(o=>!seen.has(o.it[0])&&seen.add(o.it[0])).slice(0,4);
+}
+const INTER=[
+{re:/tortilla|tostada|pan |pan$|panes|arroz|pasta|papa|camote|avena|cereal|all-bran|galleta|salmas|crackers|totopos|quinoa|doradita/i,t:"Cereales y tubérculos",s:"1 tortilla de maíz = 1 rebanada de pan integral = 2 tostadas horneadas = 1/3 taza de arroz o pasta cocidos = 1/2 papa mediana = 1/2 camote chico = 1/3 taza de avena"},
+{re:/pollo|pechuga|res\b|bistec|sirloin|carne|molida|atún|pescado|filete|tilapia|salmón|camar|huevo|clara|jamón|panela|requesón|cottage|surimi|sardina|cerdo|pierna|lomo|barbacoa/i,t:"Proteínas",s:"30 g de pollo, res magra o pescado = 1 huevo = 2 claras = 1/4 de lata de atún = 40 g de queso panela = 2 rebanadas de jamón de pavo = 1/2 taza de yogur griego"},
+{re:/aguacate|aceite|almendra|nuez|nueces|cacahuate|mayonesa|crema|ghee/i,t:"Grasas",s:"1/4 de aguacate = 1 cucharadita de aceite de oliva = 10 almendras = 5 nueces = 2 cucharaditas de mayonesa light"},
+{re:/leche|yogur/i,t:"Lácteos",s:"1 taza de leche light = 3/4 de taza de yogur griego natural"},
+{re:/fresa|plátano|manzana|mango|naranja|pera|moras|arándano|blueberr|mandarina|uva|papaya|piña|fruta|melón/i,t:"Frutas",s:"1 manzana = 1/2 plátano = 1 taza de fresas = 1 naranja = 1/2 mango = 12 uvas = 1 taza de papaya o melón"},
+{re:/frijol/i,t:"Leguminosas",s:"1/2 taza de frijoles = 1/2 taza de lentejas o garbanzos cocidos"}];
+function subsHTML(item){const txt=item[0]+" "+item[1];const rows=INTER.filter(x=>x.re.test(txt));
+  return `<ul class="subs">${rows.map(x=>`<li><b>${x.t}:</b> ${esc(x.s)}</li>`).join("")}<li><b>Verduras:</b> son libres; cámbialas por las que tengas.</li></ul>`}
+
+/* ---------- Lista de compras ---------- */
+const ING=[
+[/arroz de coliflor|coliflor/i,"Coliflor","Verduras","pza",.25],[/carne molida|molida/i,"Carne molida 90/10","Proteínas","g",120],[/carne seca|machaca/i,"Carne seca","Proteínas","g",30],
+[/pechuga|pollo/i,"Pollo o pechuga","Proteínas","g",120],[/milanesa de res|bistec|sirloin|arrachera|diezmillo|carne asada|\bres\b|chambarete|barbacoa|agujas|t-bone|pulpa/i,"Carne de res magra","Proteínas","g",130],
+[/atún/i,"Atún en agua","Proteínas","lata",1],[/salmón/i,"Salmón","Proteínas","g",100],[/tilapia|pescado|filete/i,"Filete de pescado","Proteínas","pza",1],[/camarón|camarones/i,"Camarón","Proteínas","g",120],
+[/claras?\b/i,"Claras de huevo","Proteínas","pza",2],[/huevos?\b/i,"Huevo","Proteínas","pza",2],[/jamón/i,"Jamón de pavo","Proteínas","reb",2],[/salchicha/i,"Salchicha de pavo","Proteínas","pza",1],
+[/surimi/i,"Surimi","Proteínas","pza",2],[/sardina/i,"Sardinas","Proteínas","lata",1],[/cerdo|pierna|lomo|chuleta/i,"Cerdo magro","Proteínas","g",130],
+[/crema de cacahuate/i,"Crema de cacahuate","Snacks","cda",1],[/leche/i,"Leche light","Lácteos","taza",1],[/yogur/i,"Yogur griego natural","Lácteos","taza",1],[/panela/i,"Queso panela","Lácteos","g",40],
+[/requesón|cottage/i,"Requesón o cottage","Lácteos","g",90],[/oaxaca|asadero|mozzarella|queso/i,"Queso Oaxaca o asadero","Lácteos","g",30],[/\bcrema\b/i,"Crema","Lácteos","cda",2],
+[/tortilla|delgadita/i,"Tortillas de maíz","Cereales","pza",3],[/tostada/i,"Tostadas horneadas","Cereales","pza",3],[/pan integral|pan tostado|panes|\bpan\b/i,"Pan integral","Cereales","reb",2],
+[/arroz/i,"Arroz","Cereales","taza",.5],[/pasta/i,"Pasta","Cereales","taza",1],[/avena/i,"Avena","Cereales","taza",.5],[/camote/i,"Camote","Cereales","pza",1],[/\bpapa/i,"Papa","Cereales","pza",1],
+[/all-bran|cereal/i,"Cereal integral","Cereales","taza",1],[/frijol/i,"Frijoles","Cereales","taza",.5],[/quinoa/i,"Quinoa","Cereales","taza",1],[/totopo/i,"Totopos horneados","Cereales","g",50],
+[/galleta|salmas|crackers|doradita|trusnack|brownie/i,"Galletas o crackers","Snacks","paq",1],[/barra|barrita|stila|fiber one/i,"Barras","Snacks","pza",1],[/palomitas/i,"Palomitas","Snacks","bolsa",1],
+[/edamame/i,"Edamames","Snacks","taza",.5],[/gelatina/i,"Gelatina light","Snacks","pza",1],[/paleta/i,"Paletas sin azúcar","Snacks","pza",1],[/almendra/i,"Almendras","Snacks","pza",10],[/nuez|nueces/i,"Nueces","Snacks","pza",5],
+[/kale chips|susalitas|churrinopal/i,"Botanas horneadas","Snacks","bolsa",1],[/hummus/i,"Hummus","Snacks","cda",2],
+[/plátano/i,"Plátano","Frutas","pza",.5],[/manzana/i,"Manzana","Frutas","pza",1],[/fresa/i,"Fresas","Frutas","taza",1],[/moras|arándano|blueberr|frambuesa/i,"Moras o arándanos","Frutas","taza",.5],
+[/mango/i,"Mango","Frutas","pza",.5],[/naranja/i,"Naranja","Frutas","pza",1],[/\bpera/i,"Pera","Frutas","pza",1],[/mandarina/i,"Mandarina","Frutas","pza",1],[/uva/i,"Uvas","Frutas","taza",.5],[/papaya|piña|melón|sandía/i,"Papaya, piña o melón","Frutas","taza",1],
+[/limón|limones/i,"Limones","Frutas","pza",1],[/fruta/i,"Fruta de temporada","Frutas","pza",1],
+[/nopal/i,"Nopales","Verduras","taza",1],[/espinaca/i,"Espinaca","Verduras","taza",1],[/calabaza|calabacita|calabacín/i,"Calabacita","Verduras","pza",1],[/zanahoria/i,"Zanahoria","Verduras","pza",1],
+[/pico de gallo/i,"Jitomate y cebolla (pico de gallo)","Verduras","taza",.5],[/tomate|jitomate/i,"Jitomate","Verduras","pza",1],[/cebolla/i,"Cebolla","Verduras","pza",.25],[/chile|jalapeño|chipotle/i,"Chiles","Verduras","pza",1],
+[/lechuga|repollo/i,"Lechuga o repollo","Verduras","pza",.25],[/pepino/i,"Pepino","Verduras","pza",.5],[/champiñ/i,"Champiñones","Verduras","g",100],[/pimiento|morrón/i,"Pimiento morrón","Verduras","pza",.5],
+[/brócoli/i,"Brócoli","Verduras","taza",1],[/ejote/i,"Ejotes","Verduras","taza",.5],[/aguacate|guacamole/i,"Aguacate","Verduras","pza",.25],[/jícama/i,"Jícama","Verduras","pza",.25],
+[/kale|arúgula/i,"Kale o arúgula","Verduras","taza",1],[/espárrago/i,"Espárragos","Verduras","manojo",.25],[/verdura|ensalada/i,"Verduras variadas","Verduras","taza",1],
+[/aceite/i,"Aceite de oliva o aguacate","Otros","cdta",1],[/salsa/i,"Salsa casera","Otros","taza",.25],[/mayonesa/i,"Mayonesa light","Otros","cdta",2],[/café/i,"Café","Otros","taza",1]];
+const QPAT=/(\d+(?:[.,]\d+)?(?:\/\d+)?|½|¼|¾)(?:\s*(?:a|–|-)\s*\d+(?:[.,]\d+)?)?\s*(g\b|gramos|kg|tazas?|rebanadas?|reb\.?|piezas?|pzas?|latas?|sobres?|paquetes?|paq\.?|cdas?|cdtas?|cucharadas?|cucharaditas?|filetes?|barras?|bolsitas?|de taza|de pieza|de pza)?/gi;
+function parseLine(line,f,acc){
+  line=line.split(/\s+o\s+/)[0];
+  const hits=[];ING.forEach((d,di)=>{const m=line.match(d[0]);if(m&&!hits.some(h=>h.pos<=m.index&&m.index<h.end))hits.push({d,pos:m.index,end:m.index+m[0].length})});
+  hits.sort((a,b)=>a.pos-b.pos);let prev=0;
+  hits.forEach(h=>{const seg=line.slice(prev,h.pos);prev=h.end;let q=null,unit=null;let m;QPAT.lastIndex=0;while((m=QPAT.exec(seg)))if(m[1]){q=qparse(m[1]);unit=(m[2]||"").toLowerCase()}
+    const d=h.d;let val=d[4];
+    if(q!=null){if(d[3]==="g"){val=/^g|gramos/.test(unit)?q:/kg/.test(unit)?q*1000:(unit?d[4]:q*d[4])}else if(d[3]==="taza"){val=/taza/.test(unit)?q:/de taza/.test(unit)?q:(unit?d[4]:q*d[4])}else if(!unit||/pieza|pza|reb|lata|filete|barra|paq|sobre|bolsit|cda|cdta|cuchar/.test(unit))val=q}
+    const k=d[1];acc[k]=acc[k]||{cat:d[2],u:d[3],q:0};acc[k].q+=val*f;
+  });
+}
+function dayIngredients(p,D,acc){
+  const h=getDay(D.k,p),f=pfac(p);
+  mealsOf(p).forEach(m=>{
+    if(m.snack||m.kid){const s=snackFor(m,p,h,D);parseLine(s[0],1,acc);return}
+    const r=dishFor(m,p,h,D);if(r.libre||r.fuera)return;
+    r.item[1].split("|").forEach(l=>parseLine(l,f,acc));
+  });
+}
+function fmtQ(q,u){
+  if(u==="g")return q>=1000?f1(q/1000)+" kg":Math.round(q/10)*10+" g";
+  const n=u==="taza"||u==="cda"||u==="cdta"?Math.max(.5,Math.round(q*2)/2):Math.max(1,Math.ceil(q-.05));
+  const num=Number.isInteger(n)?String(n):(Math.floor(n)?Math.floor(n):"")+"½";
+  const lab={pza:n===1?"pieza":"piezas",reb:n===1?"rebanada":"rebanadas",lata:n===1?"lata":"latas",taza:n===1?"taza":"tazas",paq:n===1?"paquete":"paquetes",bolsa:n===1?"bolsa":"bolsas",cda:"cda",cdta:"cdta",manojo:n===1?"manojo":"manojos"}[u]||u;
+  return num+" "+(n>1?lab:lab.replace(/s$/,"").replace("piezas","pieza"));
+}
+const CATS=["Proteínas","Lácteos","Cereales","Verduras","Frutas","Snacks","Otros"];
+let SHOP={days:3,fam:false};
+function shoppingHTML(){
+  const p=P();const ppl=SHOP.fam?S.order.map(id=>S.profiles[id]).filter(x=>x&&x.info.familia):[p];
+  const acc={};for(let d=0;d<SHOP.days;d++){const D=DC(addDays(today,d));ppl.forEach(x=>dayIngredients(x,D,acc))}
+  const by={};Object.keys(acc).forEach(k=>{const a=acc[k];(by[a.cat]=by[a.cat]||[]).push([k,a])});
+  const txt=CATS.filter(c=>by[c]).map(c=>c+":\n"+by[c].sort((a,b)=>a[0].localeCompare(b[0],"es")).map(([k,a])=>"- "+k+": "+fmtQ(a.q,a.u)).join("\n")).join("\n\n");
+  SHOP.txt="Lista de compras NutriGym ("+(SHOP.days===3?"próximos 3 días":"semana")+")\n\n"+txt;
+  return `<div class="chips" role="group" aria-label="Periodo"><button class="chip" data-shd="3" aria-pressed="${SHOP.days===3}">Próximos 3 días</button><button class="chip" data-shd="7" aria-pressed="${SHOP.days===7}">Semana</button>${p.info.familia?`<button class="chip" data-shf="0" aria-pressed="${!SHOP.fam}">Solo ${esc(p.info.nombre)}</button><button class="chip" data-shf="1" aria-pressed="${SHOP.fam}">Toda la familia</button>`:""}</div>
+  ${CATS.filter(c=>by[c]).map(c=>`<details class="shopcat" ${c==="Proteínas"||c==="Verduras"?"open":""}><summary>${c} <span class="small">(${by[c].length})</span></summary><ul>${by[c].sort((a,b)=>a[0].localeCompare(b[0],"es")).map(([k,a])=>`<li><span>${esc(k)}</span><b>≈ ${fmtQ(a.q,a.u)}</b></li>`).join("")}</ul></details>`).join("")}
+  <div class="acts"><button class="btn sm" id="shCopy">📋 Copiar lista</button>${navigator.share?`<button class="btn sm" id="shShare">Compartir</button>`:""}</div>
+  <p class="small" style="margin:8px 0 0">Cantidades aproximadas según los menús y las porciones de ${SHOP.fam?"cada integrante":"este perfil"}. No incluye comidas libres ni comidas fuera de casa.</p>`;
+}
+
+/* ---------- Hoy (y los siguientes 2 días) ---------- */
 function renderHoy(){
-  const p=P(),i=p.info,h=getDay(today),c=calc(p),kid=isKid(i),minor=isMinor(i),can=canRecord(p),f=pfac(p);
-  const lug=LUGAR(i);const mine=h.plan&&h.plan.length&&h.plan.every(g=>G[g]);let gs=mine?h.plan:SPLIT[dow];
-  if(!mine&&lug==="casa"&&gs){gs=gs.filter(g=>HG[g]);if(!gs.length)gs=dow===6?["cardio_casa"]:null}
-  let html="";
-  if(i.pendiente&&canEditInfo(p))html+=`<div class="card glass" style="margin-top:16px;border-color:rgba(245,158,11,.5)"><b>Faltan datos de ${esc(i.nombre)}</b><p class="small" style="margin:4px 0 8px">Completa edad, estatura y peso para calcular sus porciones.</p><button class="btn primary sm" data-edit="${p.id}">Completar datos</button></div>`;
-  html+=(lug==="no"&&!kid)?`<div class="hero glass"><div class="k">Hoy toca</div><h1>Caminata de ${+i.caminata||30} min</h1><p>A paso rápido. Puedes repartirla en 2 o 3 ratos del día.</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver opciones</button></div>`
-    :kid?`<div class="hero glass"><div class="k">Hoy toca</div><h1>60 min de juego</h1><p>Futbol, bici, alberca o juegos de correr.</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver ideas</button></div>`
-    :gs?`<div class="hero glass"><div class="k">${mine?"Hoy entrenas":"Hoy toca"}</div><h1>${gs.map(g=>G[g].t).join(" + ")}</h1><p>${mine?"Lo elegiste en Entrenar. Si cambias de músculos, aquí se actualiza solo.":"Elige cuánto tiempo tienes y tu rutina queda lista."}</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver mi rutina</button></div>`
-    :`<div class="hero glass"><div class="k">Hoy toca</div><h1>Descanso</h1><p>Recupera y duerme bien. Si quieres moverte: correr, caminadora o futbol.</p><button class="btn primary" id="irRutina" style="margin-top:12px">Ver opciones</button></div>`;
-  const meals=kid||(minor&&!c)?MK_KID:MK;
+  if(HD<today||HD>addDays(today,2))HD=today;
+  const p=P(),i=p.info,D=DC(HD),isT=HD===today,h=getDay(HD),c=calc(p),kid=isKid(i),minor=isMinor(i),can=canRecord(p),f=pfac(p);
+  const lug=LUGAR(i);const mine=h.plan&&h.plan.length&&h.plan.every(g=>G[g]);let gs=mine?h.plan:SPLIT[D.dow];
+  if(!mine&&lug==="casa"&&gs){gs=gs.filter(g=>HG[g]);if(!gs.length)gs=D.dow===6?["cardio_casa"]:null}
+  const dayWord=isT?"Hoy":HD===addDays(today,1)?"Mañana":cap(DIAS[D.dow]);
+  let html=`<div class="daystrip" role="group" aria-label="Día">${[0,1,2].map(n=>{const k=addDays(today,n),dd=parseYmd(k);return `<button class="dayb" data-hd="${k}" aria-pressed="${k===HD}"><small>${n===0?"Hoy":n===1?"Mañana":cap(DIAS[dd.getDay()])}</small><b>${dd.getDate()}</b></button>`}).join("")}<span class="small" style="align-self:center">Planea y prepara con anticipación</span></div>`;
+  if(i.pendiente&&canEditInfo(p))html+=`<div class="card glass" style="border-color:rgba(245,158,11,.5)"><b>Faltan datos de ${esc(i.nombre)}</b><p class="small" style="margin:4px 0 8px">Completa edad, estatura y peso para calcular sus porciones.</p><button class="btn primary sm" data-edit="${p.id}">Completar datos</button></div>`;
+  const k1=`${dayWord} toca`;
+  html+=(lug==="no"&&!kid)?`<div class="hero glass"><div class="k">${k1}</div><h1>Caminata de ${+i.caminata||30} min</h1><p>A paso rápido. Puedes repartirla en 2 o 3 ratos del día.</p>${isT?`<button class="btn primary" id="irRutina" style="margin-top:12px">Ver opciones</button>`:""}</div>`
+    :kid?`<div class="hero glass"><div class="k">${k1}</div><h1>60 min de juego</h1><p>Futbol, bici, alberca o juegos de correr.</p>${isT?`<button class="btn primary" id="irRutina" style="margin-top:12px">Ver ideas</button>`:""}</div>`
+    :gs?`<div class="hero glass"><div class="k">${mine&&isT?"Hoy entrenas":k1}</div><h1>${gs.map(g=>G[g].t).join(" + ")}</h1><p>${mine&&isT?"Lo elegiste en Entrenar. Si cambias de músculos, aquí se actualiza solo.":isT?"Elige cuánto tiempo tienes y tu rutina queda lista.":"Rutina sugerida para ese día."}</p>${isT?`<button class="btn primary" id="irRutina" style="margin-top:12px">Ver mi rutina</button>`:""}</div>`
+    :`<div class="hero glass"><div class="k">${k1}</div><h1>Descanso</h1><p>Recupera y duerme bien. Si quieres moverte: correr, caminadora o futbol.</p>${isT?`<button class="btn primary" id="irRutina" style="margin-top:12px">Ver opciones</button>`:""}</div>`;
+  const meals=mealsOf(p);
   if(c){
-    const mDay=c.meta+Math.round((h.quem||0)*(c.add!=null?c.add:.5));
-    const comido=Object.values(h.ate||{}).reduce((a,b)=>a+(+b||0),0)+(h.extra||0);
-    const rest=mDay-comido;
-    html+=`<div class="sec"><h2>Calorías de hoy</h2><span class="note">Aproximadas</span></div>
-    <div class="card glass"><div class="krow"><div><div class="small">Meta</div><div class="v">${fmt(mDay)}</div></div><div><div class="small">Llevas</div><div class="v">${fmt(comido)}</div></div><div><div class="small">${rest>=0?"Te quedan":"Te pasaste"}</div><div class="v" style="color:${rest>=0?"var(--ink)":"var(--bad)"}">${fmt(Math.abs(rest))}</div></div></div>
-    <div class="bar"><i style="width:${Math.min(100,comido/mDay*100)}%"></i></div>
-    <p class="small" style="margin:10px 0 0">${minor?"Para ganar músculo sin dietas restrictivas: un poco más de lo que gastas y suficiente proteína":c.gain&&c.kg?`Para subir de ${f1(c.w)} a ${f1(+i.pesoMeta)} kg ganando músculo`:c.gain?"Para ganar músculo: un poco más de lo que gastas":c.box?(c.mode==="prep"?`Preparación de pelea: faltan ${c.fd} días. Bajar de ${f1(c.w)} a ${f1(c.pp)} kg solo con grasa, cuidando el músculo`:`Mantenimiento en ${f1(c.pm)} kg (hoy ${f1(c.w)} kg); peso de pelea ${f1(c.pp)} kg`):i.objetivo==="bajar"&&+i.pesoMeta?`Para ir de ${f1(c.w)} a ${f1(+i.pesoMeta)} kg`:"Calculada con tu peso, estatura y edad"}. Proteína: ${c.prot} g al día.${h.quem?(c.add===1?` Sumamos las ${fmt(h.quem)} kcal que quemaste.`:c.add===.75?` Sumamos el 75 % de las ${fmt(h.quem)} kcal que quemaste.`:` Sumamos la mitad de las ${fmt(h.quem)} kcal que quemaste.`):""}</p>
-    ${can?`<div class="line" style="margin-top:8px"><label class="fl" style="flex:1">Calorías que quemé entrenando<div class="inl"><input type="number" id="quem" inputmode="numeric" min="0" step="10" placeholder="Ej. 450" value="${h.quem||""}"><button class="btn primary" id="quemOk">Guardar</button></div></label></div>`:""}</div>`;
+    if(isT){
+      const mDay=c.meta+Math.round((h.quem||0)*(c.add!=null?c.add:.5));
+      const comido=Object.values(h.ate||{}).reduce((a,b)=>a+(+b||0),0)+(h.extra||0);
+      const rest=mDay-comido;
+      html+=`<div class="sec"><h2>Calorías de hoy</h2><span class="note">Aproximadas</span></div>
+      <div class="card glass"><div class="krow"><div><div class="small">Meta</div><div class="v">${fmt(mDay)}</div></div><div><div class="small">Llevas</div><div class="v">${fmt(comido)}</div></div><div><div class="small">${rest>=0?"Te quedan":"Te pasaste"}</div><div class="v" style="color:${rest>=0?"var(--ink)":"var(--bad)"}">${fmt(Math.abs(rest))}</div></div></div>
+      <div class="bar"><i style="width:${Math.min(100,comido/mDay*100)}%"></i></div>
+      <p class="small" style="margin:10px 0 0">${minor?"Para ganar músculo sin dietas restrictivas: un poco más de lo que gastas y suficiente proteína":c.gain&&c.kg?`Para subir de ${f1(c.w)} a ${f1(+i.pesoMeta)} kg ganando músculo`:c.gain?"Para ganar músculo: un poco más de lo que gastas":c.box?(c.mode==="prep"?`Preparación de pelea: faltan ${c.fd} días. Bajar de ${f1(c.w)} a ${f1(c.pp)} kg solo con grasa, cuidando el músculo`:`Mantenimiento en ${f1(c.pm)} kg (hoy ${f1(c.w)} kg); peso de pelea ${f1(c.pp)} kg`):i.objetivo==="bajar"&&+i.pesoMeta?`Para ir de ${f1(c.w)} a ${f1(+i.pesoMeta)} kg`:"Calculada con tu peso, estatura y edad"}. Proteína: ${c.prot} g al día.${h.quem?(c.add===1?` Sumamos las ${fmt(h.quem)} kcal que quemaste.`:c.add===.75?` Sumamos el 75 % de las ${fmt(h.quem)} kcal que quemaste.`:` Sumamos la mitad de las ${fmt(h.quem)} kcal que quemaste.`):""}</p>
+      ${can?`<div class="line" style="margin-top:8px"><label class="fl" style="flex:1">Calorías que quemé entrenando<div class="inl"><input type="number" id="quem" inputmode="numeric" min="0" step="10" placeholder="Ej. 450" value="${h.quem||""}"><button class="btn primary" id="quemOk">Guardar</button></div></label></div>`:""}</div>`;
+    }else{
+      let tot=0;meals.forEach(m=>{if(m.snack){tot+=snackFor(m,p,h,D)[1];return}if(m.kid)return;const r=dishFor(m,p,h,D);tot+=r.libre||r.fuera?r.item[2]:Math.round(r.item[2]*f)});
+      html+=`<div class="card glass" style="margin-top:12px"><div class="krow"><div><div class="small">Meta</div><div class="v">${fmt(c.meta)}</div></div><div><div class="small">Menú planeado</div><div class="v">${fmt(tot)}</div></div><div><div class="small">Diferencia</div><div class="v">${tot>c.meta?"+":"−"}${fmt(Math.abs(tot-c.meta))}</div></div></div><p class="small" style="margin:8px 0 0">${tot>c.meta+100?"El menú pasa tu meta: cambia un platillo por una opción equivalente más ligera.":tot<c.meta-200?"Te sobran calorías: agrega una fruta o un snack de proteína, o elige una opción equivalente más completa.":"El menú está dentro de tu meta."}</p></div>`;
+    }
   }else if(!minor)html+=`<div class="card glass"><b>Completa tus datos</b><p class="small">Con edad, estatura y peso calculo tus calorías y tus porciones.</p></div>`;
-  html+=`<div class="sec"><h2>${p.id===myProfileId()?"Tu menú":"Menú de "+esc(i.nombre)}</h2>${f!==1?`<span class="tag c">Porción ×${f1(f)}</span>`:""}</div>`;
-  html+=mealsHTML(meals,p,h,f,can,!!c);
-  if(c&&can)html+=`<div class="card glass"><b>¿Comiste algo más?</b><div class="acts"><button class="btn sm" data-extra="60">+ Fruta 60</button><button class="btn sm" data-extra="40">+ Café con leche 40</button><button class="btn sm" data-extra="100">+ 100 kcal</button>${h.extra?`<button class="btn sm ghost" data-extra="0">Quitar extras</button>`:""}</div></div>`;
+  html+=`<div class="sec"><h2>${p.id===myProfileId()?"Tu menú":"Menú de "+esc(i.nombre)}${isT?"":" · "+dayWord.toLowerCase()+" "+D.d.getDate()}</h2>${f!==1?`<span class="tag c">Porción ×${f1(f)}</span>`:""}</div>`;
+  html+=mealsHTML(meals,p,h,f,can,!!c,D);
+  if(c&&can&&isT)html+=`<div class="card glass"><b>¿Comiste algo más?</b><div class="acts"><button class="btn sm" data-extra="60">+ Fruta 60</button><button class="btn sm" data-extra="40">+ Café con leche 40</button><button class="btn sm" data-extra="100">+ 100 kcal</button>${h.extra?`<button class="btn sm ghost" data-extra="0">Quitar extras</button>`:""}</div></div>`;
   if(minor&&!c)html+=`<div class="card glass"><p class="small" style="margin:0">A esta edad no se hacen dietas para bajar de peso: come el mismo platillo de la familia en su porción, con verduras, fruta, proteína y agua.</p></div>`;
-  if(i.familia&&(S.mode==="local"||S.inFamily))html+=familyMenuHTML();
-  html+=`<div class="card glass"><b>Para el estrés</b><p class="small" style="margin:4px 0 0">${TIPS[dayIdx%TIPS.length]}</p></div>`;
-  $("#v-hoy").innerHTML=html;wireHoy(h);
+  if(i.familia&&(S.mode==="local"||S.inFamily))html+=familyMenuHTML(D);
+  html+=`<div class="sec"><h2>🛒 Lista de compras</h2></div><div class="card glass" id="shopBox">${shoppingHTML()}</div>`;
+  html+=`<div class="card glass"><b>Para el estrés</b><p class="small" style="margin:4px 0 0">${TIPS[D.idx%TIPS.length]}</p></div>`;
+  $("#v-hoy").innerHTML=html;wireHoy(h,D);
 }
 function myProfileId(){if(S.mode==="local")return S.cur;const e=S.me&&S.me.email;return S.order.find(id=>S.profiles[id].info.email===e)||null}
 function ingList(item,mk,f,kid,minor){
@@ -1387,57 +1553,74 @@ function ingList(item,mk,f,kid,minor){
   if(mk==="d")ings.push(minor?"Leche o agua":"Café americano (con Splenda o stevia si gustas)");
   return `<ul>${ings.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
 }
-function mealsHTML(meals,p,h,f,can,adult){
+function moreHTML(cat,item,D,f,scope,canChange){
+  const eq=equivalents(cat,item,D);
+  return `<details class="more"><summary>Equivalentes, sustituciones e ingredientes</summary>
+   ${eq.length?`<div class="small" style="margin:8px 0 4px"><b>Opciones equivalentes</b> (calorías parecidas):</div><div class="eqs">${eq.map(o=>`<button class="eqb" data-eq="${o.ref}" data-mk="${cat}" data-scope="${scope||""}" ${canChange?"":"disabled"}><b>${esc(o.it[0])}</b><small>${fmt(o.it[2]*f)} kcal${o.swap?(cat==="d"?" · es cena":" · es desayuno"):""}</small></button>`).join("")}</div>`:""}
+   <div class="small" style="margin:10px 0 2px"><b>Sustituciones posibles</b> (intercambios equivalentes):</div>${subsHTML(item)}
+   <div class="small" style="margin:10px 0 2px"><b>Ingredientes a comprar</b>:</div><div class="small">${(()=>{const acc={};item[1].split("|").forEach(l=>parseLine(l,f,acc));return Object.keys(acc).map(k=>esc(k)+" ≈ "+fmtQ(acc[k].q,acc[k].u)).join(" · ")||"—"})()}</div>
+  </details>`;
+}
+function mealsHTML(meals,p,h,f,can,adult,D){
+  D=D||DC(today);const isT=D.k===today;
   const nowMin=now.getHours()*60+now.getMinutes();const kid=isKid(p.info),minor=isMinor(p.info);
-  const nextK=(meals.find(m=>m.m+60>nowMin&&(h.ate||{})[m.k]==null)||{}).k;
+  const nextK=isT?(meals.find(m=>m.m+60>nowMin&&(h.ate||{})[m.k]==null)||{}).k:null;
   return meals.map(m=>{
     let item,fuera=false,scope=null,libre=false;
-    if(m.snack||m.kid){const arr=m.kid?m.arr:snackPool(m.k);const base=Math.floor(rng(hash(m.k+dayIdx+p.id))()*arr.length);item=arr[(base+((h.off||{})[m.k]||0))%arr.length]}
-    else{const r=dishFor(m,p,h);item=r.item;fuera=r.fuera;scope=r.scope;libre=r.libre}
+    if(m.snack||m.kid)item=snackFor(m,p,h,D);
+    else{const r=dishFor(m,p,h,D);item=r.item;fuera=r.fuera;scope=r.scope;libre=r.libre}
     const kcal=adult&&!m.kid?Math.round((m.snack?item[1]:item[2])*(m.snack||libre?1:f)):null;
     let bodyH="";
     if(m.kid)bodyH="";
-    else if(m.snack)bodyH=`<div class="pair">Acompáñalo con ${esc(item[2])}.</div>`;
+    else if(m.snack)bodyH=`<div class="pair"><span class="tag c" style="margin:0 6px 0 0">${snType(item)}</span>Acompáñalo con ${esc(item[2])}.</div>`;
     else if(fuera||libre)bodyH=`<p style="margin:6px 0 0;color:#CBD5E1">${esc(item[1])}</p>`;
     else bodyH=ingList(item,m.k,f,kid,minor);
     const done=(h.ate||{})[m.k]!=null;
-    const famTag=scope?`<span class="tag c">Menú familiar</span>`:"";
-    const srcTag=!m.snack&&!m.kid&&!fuera&&!libre&&(item[3]==="c"||item[3]==="x")?`<span class="tag">Con lo de casa</span>`:"";
     const canChange=scope?(S.mode==="local"||S.inFamily):can;
+    const tagC=!m.snack&&!m.kid&&!fuera&&!libre&&(item[3]==="c"||item[3]==="x")?`<span class="tag">Con lo de casa</span>`:"";
     return `<div class="card glass meal${m.k===nextK?" next":""}"><div class="time">${m.h}</div><div>
-      <div class="lab">${fuera?"Comida fuera de casa":m.t}${m.k===nextK?'<span class="tag c">Siguiente</span>':""}${famTag}</div>
-      <h3>${esc(item[0])}</h3>${kcal!=null?`<div class="kc">${fmt(kcal)} kcal</div>`:""}${bodyH}${srcTag?`<div style="margin-top:6px">${srcTag}</div>`:""}
-      <div class="acts">${!libre&&canChange?`<button class="btn sm" data-off="${fuera?"f":m.k}" data-scope="${scope||""}">⇄ ${scope?"Cambiar para la familia":"Otra opción"}</button>`:""}${can&&kcal!=null?`<label class="tick"><input type="checkbox" data-ate="${m.k}" data-kcal="${kcal}" ${done?"checked":""}>Ya lo comí</label>`:""}</div>
-      ${m.k==="c"&&can&&!scope&&!libre&&!minor?`<div class="acts"><label class="tick"><input type="checkbox" id="sinlonche" ${h.sinLonche?"checked":""}>Hoy no llevo lonche</label></div>`:""}
+      <div class="lab">${fuera?"Comida fuera de casa":m.t}${m.k===nextK?'<span class="tag c">Siguiente</span>':""}${scope?'<span class="tag c">Menú familiar</span>':""}${tagC}</div>
+      <h3>${esc(item[0])}</h3>${kcal!=null?`<div class="kc">${fmt(kcal)} kcal</div>`:""}${bodyH}
+      <div class="acts">${!libre&&canChange?`<button class="btn sm" data-off="${fuera?"f":m.k}" data-scope="${scope||""}">⇄ ${scope?"Cambiar para la familia":"Otra opción"}</button>`:""}${can&&kcal!=null&&isT?`<label class="tick"><input type="checkbox" data-ate="${m.k}" data-kcal="${kcal}" ${done?"checked":""}>Ya lo comí</label>`:""}</div>
+      ${m.k==="c"&&can&&!scope&&!libre&&!minor?`<div class="acts"><label class="tick"><input type="checkbox" id="sinlonche" ${h.sinLonche?"checked":""}>${isT?"Hoy no llevo lonche":"Ese día no llevo lonche"}</label></div>`:""}
+      ${!m.snack&&!m.kid&&!libre&&!fuera?moreHTML(m.k,item,D,f,scope,canChange):""}
     </div></div>`;
   }).join("");
 }
-function familyMenuHTML(){
+function familyMenuHTML(D){
   const blocks=[];
   [["d","Desayuno"],["c","Comida"],["n","Cena"]].forEach(([mk,t])=>{
-    const scopes=wkend||mk==="n"?["todos"]:["casa"];
-    scopes.forEach(sc=>{
-      const libre=isLibre(mk);const item=libre?LIBRE[mk]:familyPick(mk,sc);
-      const mem=familyMembers(sc);if(!mem.length)return;
-      blocks.push(`<div class="card glass"><div class="lab small">${t} · ${sc==="todos"?"para toda la familia":"para "+mem.map(x=>esc(x.info.nombre)).join(", ")}</div><h3 style="margin-top:2px">${esc(item[0])}</h3>
-      ${libre?`<p class="small" style="margin:4px 0 0">${esc(item[1])}</p>`:mem.map(m=>{const ff=pfac(m),cc=calc(m);return `<details class="fam-p"><summary>${esc(m.info.nombre)} · ${isKid(m.info)?"porción de niño":"porción ×"+f1(ff)}${cc?" · "+fmt(item[2]*ff)+" kcal":""}</summary>${ingList(item,mk,ff,isKid(m.info),isMinor(m.info))}</details>`}).join("")}
-      ${!libre&&(S.mode==="local"||S.inFamily)?`<div class="acts"><button class="btn sm" data-off="${mk}" data-scope="${sc}">⇄ Cambiar platillo</button></div>`:""}</div>`);
-    });
+    const sc=D.wk||mk==="n"?"todos":"casa";
+    const libre=isLibre(mk,D);const item=libre?LIBRE[mk]:familyPick(mk,sc,D);
+    const mem=familyMembers(sc);if(!mem.length)return;
+    blocks.push(`<div class="card glass"><div class="lab small">${t} · ${sc==="todos"?"para toda la familia":"para "+mem.map(x=>esc(x.info.nombre)).join(", ")}</div><h3 style="margin-top:2px">${esc(item[0])}</h3>
+    ${libre?`<p class="small" style="margin:4px 0 0">${esc(item[1])}</p>`:mem.map(m=>{const ff=pfac(m),cc=calc(m);return `<details class="fam-p"><summary>${esc(m.info.nombre)} · ${isKid(m.info)?"porción de niño":"porción ×"+f1(ff)}${cc?" · "+fmt(item[2]*ff)+" kcal":""}</summary>${ingList(item,mk,ff,isKid(m.info),isMinor(m.info))}</details>`}).join("")}
+    ${!libre&&(S.mode==="local"||S.inFamily)?`<div class="acts"><button class="btn sm" data-off="${mk}" data-scope="${sc}">⇄ Cambiar platillo</button></div>`:""}</div>`);
   });
-  return `<div class="sec"><h2>Menú de la familia hoy</h2></div><div class="sec" style="margin-top:0"><span class="note">${wkend?(sat?"Sábado: mismo menú para todos, cena libre":"Domingo: mismo menú para todos, comida libre"):"Toca un nombre para ver su porción"}</span></div>`+blocks.join("");
+  return `<div class="sec"><h2>Menú de la familia ${D.k===today?"hoy":"· "+DIAS[D.dow]+" "+D.d.getDate()}</h2></div><div class="sec" style="margin-top:0"><span class="note">${D.wk?(D.sat?"Sábado: mismo menú para todos, cena libre":"Domingo: mismo menú para todos, comida libre"):"Toca un nombre para ver su porción"}</span></div>`+blocks.join("");
 }
-function wireHoy(h){
-  const v=$("#v-hoy"),p=P();
+function wireHoy(h,D){
+  const v=$("#v-hoy"),p=P(),K=D.k;
+  $$("[data-hd]",v).forEach(b=>b.onclick=()=>{HD=b.dataset.hd;renderHoy()});
   const ir=$("#irRutina");if(ir)ir.onclick=()=>{const mine=h.plan&&h.plan.length;TS.groups=mine?h.plan.slice():(SPLIT[dow]||["correr"]);TS.zone=null;TS.touched=!!mine;resetSw();show("entrenar")};
-  const save=()=>{saveDay(today,h);renderHoy()};
+  const save=()=>{saveDay(K,h);renderHoy()};
   $$("[data-edit]",v).forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
   $$("[data-off]",v).forEach(b=>b.onclick=()=>{const k=b.dataset.off,sc=b.dataset.scope;
-    if(sc){S.fm[today]=S.fm[today]||{};S.fm[today][sc+k]=(S.fm[today][sc+k]||0)+1;saveFM(today);if(h.ate&&h.ate[k]!=null){delete h.ate[k];saveDay(today,h)}toast("Menú familiar actualizado");renderHoy();return}
-    h.off=h.off||{};h.off[k]=(h.off[k]||0)+1;const mk=k==="f"?"c":k;if(h.ate&&h.ate[mk]!=null)delete h.ate[mk];save()});
+    if(sc){S.fm[K]=S.fm[K]||{};delete S.fm[K][sc+k+"_sel"];S.fm[K][sc+k]=(S.fm[K][sc+k]||0)+1;saveFM(K);if(h.ate&&h.ate[k]!=null){delete h.ate[k];saveDay(K,h)}toast("Menú familiar actualizado");renderHoy();return}
+    h.off=h.off||{};h.off[k]=(h.off[k]||0)+1;if(h.sel)delete h.sel[k];const mk=k==="f"?"c":k;if(h.ate&&h.ate[mk]!=null)delete h.ate[mk];save()});
+  $$("[data-eq]",v).forEach(b=>b.onclick=()=>{const ref=b.dataset.eq,mk=b.dataset.mk,sc=b.dataset.scope;
+    if(sc){S.fm[K]=S.fm[K]||{};S.fm[K][sc+mk+"_sel"]=ref;saveFM(K);toast("Cambiado para la familia");renderHoy();return}
+    h.sel=h.sel||{};h.sel[mk]=ref;if(h.ate&&h.ate[mk]!=null)delete h.ate[mk];toast("Platillo cambiado");save()});
   $$("[data-ate]",v).forEach(c=>c.onchange=()=>{h.ate=h.ate||{};if(c.checked)h.ate[c.dataset.ate]=+c.dataset.kcal;else delete h.ate[c.dataset.ate];save()});
   $$("[data-extra]",v).forEach(b=>b.onclick=()=>{const x=+b.dataset.extra;h.extra=x?(h.extra||0)+x:0;save()});
   const q=$("#quemOk");if(q)q.onclick=()=>{const x=parseFloat($("#quem").value);h.quem=isFinite(x)&&x>0?Math.round(x):0;save()};
   const sl=$("#sinlonche");if(sl)sl.onchange=()=>{h.sinLonche=sl.checked;if(h.ate&&h.ate.c!=null)delete h.ate.c;save()};
+  const wireShop=()=>{const box=$("#shopBox");
+    $$("[data-shd]",box).forEach(b=>b.onclick=()=>{SHOP.days=+b.dataset.shd;box.innerHTML=shoppingHTML();wireShop()});
+    $$("[data-shf]",box).forEach(b=>b.onclick=()=>{SHOP.fam=b.dataset.shf==="1";box.innerHTML=shoppingHTML();wireShop()});
+    const cp=$("#shCopy");if(cp)cp.onclick=()=>{try{navigator.clipboard.writeText(SHOP.txt).then(()=>toast("Lista copiada"),()=>toast("No se pudo copiar"))}catch(e){toast("No se pudo copiar")}};
+    const sh=$("#shShare");if(sh)sh.onclick=()=>{navigator.share({title:"Lista de compras",text:SHOP.txt}).catch(()=>{})};
+  };wireShop();
 }
 
 /* ---------- Hábitos ---------- */
@@ -1535,11 +1718,11 @@ function renderProg(){
   const start=mondayOf(new Date(cal.y,cal.m,1));
   let cells=["L","M","M","J","V","S","D"].map(x=>`<div class="dh" aria-hidden="true">${x}</div>`).join("");
   for(let k=0;k<42;k++){const d=new Date(start);d.setDate(start.getDate()+k);if(k%7===0&&k>0&&d.getMonth()!==cal.m)break;
-    const key=ymd(d),h=getDay(key,p),fut=key>today;
-    cells+=`<button class="cd${d.getMonth()!==cal.m?" out":""}${key===cal.sel?" sel":""}${key===today?" hoy":""}" data-day="${key}" ${fut?"disabled":""} aria-label="${d.getDate()} de ${MESES[d.getMonth()]}"><span>${d.getDate()}</span><span class="mk"><i class="${h.dieta===true?"dy":h.dieta===false?"dn":""}"></i><i class="e ${h.ent===true?"ey":h.ent===false?"en":""}"></i></span></button>`}
+    const key=ymd(d),h=getDay(key,p),fut=key>addDays(today,2),plan=key>today;
+    cells+=`<button class="cd${d.getMonth()!==cal.m?" out":""}${key===cal.sel?" sel":""}${key===today?" hoy":""}" data-day="${key}" ${fut?"disabled":""} aria-label="${d.getDate()} de ${MESES[d.getMonth()]}"><span>${d.getDate()}</span>${plan?`<span class="mk"><i class="pl"></i></span>`:""}<span class="mk" ${plan?"hidden":""}><i class="${h.dieta===true?"dy":h.dieta===false?"dn":""}"></i><i class="e ${h.ent===true?"ey":h.ent===false?"en":""}"></i></span></button>`}
   const isNow=cal.y===now.getFullYear()&&cal.m===now.getMonth();
   const sd=getDay(cal.sel,p),sdd=parseYmd(cal.sel);
-  html+=`<div class="sec"><h2>Calendario</h2><span class="note"><span class="leg"><i style="background:var(--good)"></i>Dieta</span><span class="leg"><i style="background:var(--cyan);border-radius:2px"></i>Entreno</span><span class="leg"><i style="background:var(--bad)"></i>No</span></span></div>
+  html+=`<div class="sec"><h2>Calendario</h2><span class="note"><span class="leg"><i style="background:var(--good)"></i>Dieta</span><span class="leg"><i style="background:var(--cyan);border-radius:2px"></i>Entreno</span><span class="leg"><i style="background:var(--bad)"></i>No</span><span class="leg"><i style="background:var(--violet)"></i>Menú</span></span></div>
   <div class="card glass"><div class="calnav"><button class="btn sm" id="mPrev" aria-label="Mes anterior">‹</button><h3>${cap(MESES[cal.m])} ${cal.y}</h3><button class="btn sm" id="mNext" aria-label="Mes siguiente" ${isNow?"disabled":""}>›</button></div>
   <div class="cal">${cells}</div>
   <div class="line" style="margin-top:10px"><b>${fechaLarga(sdd)}</b>${can?`<button class="btn sm" id="editDay">✏️ Editar este día</button>`:`<span class="small">Se llena solo desde Hábitos</span>`}</div>
@@ -1579,7 +1762,7 @@ function renderProg(){
   }
   const v=$("#v-progreso");v.innerHTML=html;
   $$("[data-edit]",v).forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
-  $$("[data-day]",v).forEach(b=>b.onclick=()=>{cal.sel=b.dataset.day;renderProg()});
+  $$("[data-day]",v).forEach(b=>b.onclick=()=>{const k=b.dataset.day;if(k>today){HD=k;show("hoy");return}cal.sel=k;renderProg()});
   $("#mPrev").onclick=()=>{cal.m--;if(cal.m<0){cal.m=11;cal.y--}renderProg()};
   $("#mNext").onclick=()=>{if(isNow)return;cal.m++;if(cal.m>11){cal.m=0;cal.y++}renderProg()};
   $$("[data-view]",v).forEach(b=>b.onclick=()=>{cal.view=b.dataset.view;renderProg()});
