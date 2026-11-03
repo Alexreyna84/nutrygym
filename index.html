@@ -10,13 +10,11 @@
 <meta name="apple-mobile-web-app-title" content="NutriGym">
 <title>NutriGym Planner</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233B82F6'/%3E%3Cstop offset='1' stop-color='%23A855F7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0A'/%3E%3Cpath d='M14 34h6l5-12 8 22 6-14 4 4h7' stroke='url(%23g)' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230A0A0A'/%3E%3Cpath d='M14 34h6l5-12 8 22 6-14 4 4h7' stroke='%233B82F6' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Firebase (solo se usa si configuras FIREBASE_CONFIG más abajo) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<!-- Firebase se carga después de mostrar la app, para que abra rápido aunque la señal sea lenta -->
 <style>
 :root{
   --bg:#0A0A0A;--ink:#F1F5F9;--muted:#94A3B8;--dim:#64748B;
@@ -264,6 +262,7 @@ nav.tabs button[aria-current="page"] svg{stroke:url(#tg);filter:drop-shadow(0 0 
 </style>
 </head>
 <body>
+<div id="splash" style="position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0A0A;color:#F1F5F9;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3B82F6,#A855F7);display:grid;place-items:center;font-weight:800">NG</div><b style="font-size:1.2rem">NutriGym Planner</b><span id="splashMsg" style="color:#94A3B8;font-size:.9rem">Cargando…</span><button id="splashRetry" hidden style="margin-top:6px;padding:10px 16px;border-radius:12px;border:0;background:#3B82F6;color:#fff;font-weight:700">Reintentar</button></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#A855F7"/></linearGradient><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#3B82F6"/></linearGradient><linearGradient id="dg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs></svg>
 <div id="app">
 <header class="top"><div class="wrap">
@@ -392,8 +391,19 @@ function setSync(t){const el=$("#sync");if(el)el.textContent=t}
 /* ---------- Nube: Firebase ---------- */
 let FB=null,FS=null,AUTH=null;const unsubs=[];let watched={};
 function cloudReady(){return !!(FIREBASE_CONFIG&&window.firebase)}
+function hideSplash(){const s=document.getElementById("splash");if(s)s.remove()}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.async=true;s.onload=res;s.onerror=()=>rej(new Error(src));document.head.appendChild(s)})}
+function loadFirebase(){const v="https://www.gstatic.com/firebasejs/10.12.2/";return loadScript(v+"firebase-app-compat.js").then(()=>Promise.all([loadScript(v+"firebase-auth-compat.js"),loadScript(v+"firebase-firestore-compat.js")]))}
+function bootCloud(){
+  const msg=document.getElementById("splashMsg"),rt=document.getElementById("splashRetry");
+  if(msg)msg.textContent="Conectando…";if(rt)rt.hidden=true;
+  const slow=setTimeout(()=>{if(msg)msg.textContent="La señal está lenta, seguimos intentando…"},6000);
+  loadFirebase().then(()=>{clearTimeout(slow);startCloud()}).catch(()=>{clearTimeout(slow);
+    if(msg)msg.textContent="No hay conexión. Revisa tus datos o tu wifi y vuelve a intentar.";if(rt){rt.hidden=false;rt.onclick=bootCloud}});
+}
 function startCloud(){
   FB=firebase.initializeApp(FIREBASE_CONFIG);AUTH=firebase.auth();FS=firebase.firestore();
+  try{FS.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
   S.mode="cloud";S.profiles={};S.order=[];
   AUTH.onAuthStateChanged(async u=>{
     unsubs.splice(0).forEach(f=>{try{f()}catch(e){}});watched={};S.profiles={};S.order=[];
@@ -439,7 +449,7 @@ function watchData(id){
   },e=>console.warn(e)));
 }
 function renderLogin(){
-  $("#app").style.display="none";
+  hideSplash();$("#app").style.display="none";
   let el=$("#loginBox");if(!el){el=document.createElement("div");el.id="loginBox";document.body.appendChild(el)}
   el.style.display="block";
   el.innerHTML=`<div class="login glass"><div class="av" style="width:56px;height:56px;margin-bottom:14px">NG</div><h1 style="font-size:1.6rem">NutriGym <span class="grad-text">Planner</span></h1><p class="small">Entra con tu correo para ver tu plan.</p>
@@ -453,6 +463,7 @@ function renderLogin(){
   $("#lgRe").onclick=()=>AUTH.sendPasswordResetEmail(em()).then(()=>msg("Te enviamos un correo para cambiar tu contraseña.")).catch(()=>msg("Escribe tu correo primero."));
 }
 function afterData(){
+  hideSplash();
   const lb=$("#loginBox");if(lb)lb.style.display="none";
   $("#app").style.display="block";
   if(!S.cur){$("#v-hoy").innerHTML=`<div class="card glass" style="margin-top:20px"><h2>Aún no tienes perfil</h2><p class="small">Pídele al administrador que dé de alta tu perfil con tu correo ${esc(S.me&&S.me.email)}.</p><button class="btn" id="lgOut">Cerrar sesión</button></div>`;$("#lgOut").onclick=()=>AUTH.signOut();show("hoy",true);return}
@@ -1934,8 +1945,9 @@ $$("nav.tabs button").forEach(b=>b.onclick=()=>{if(b.dataset.v==="habitos")habDa
 $("#whoBtn").onclick=openSheet;
 (function init(){
   const start=(location.hash||"").slice(1);curView=VIEWS.includes(start)?start:"hoy";
-  if(cloudReady()){show(curView,true);startCloud();return}
-  localLoad();setSync("Modo local");show(curView,true);rerender();
+  if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}
+  if(FIREBASE_CONFIG){show(curView,true);bootCloud();return}
+  localLoad();setSync("Modo local");show(curView,true);rerender();hideSplash();
 })();
 </script>
 </body>
