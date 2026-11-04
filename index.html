@@ -299,7 +299,7 @@ nav.tabs button[aria-current="page"] svg{stroke:url(#tg);filter:drop-shadow(0 0 
 </style>
 </head>
 <body>
-<div id="splash" style="position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0A0A;color:#F1F5F9;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3B82F6,#A855F7);display:grid;place-items:center;font-weight:800">NG</div><b style="font-size:1.2rem">NutriGym Planner</b><span id="splashMsg" style="color:#94A3B8;font-size:.9rem">Cargando…</span><button id="splashRetry" hidden style="margin-top:6px;padding:10px 16px;border-radius:12px;border:0;background:#3B82F6;color:#fff;font-weight:700">Reintentar</button></div>
+<div id="splash" style="position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0A0A;color:#F1F5F9;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3B82F6,#A855F7);display:grid;place-items:center;font-weight:800">NG</div><b style="font-size:1.2rem">NutriGym Planner</b><span id="splashMsg" style="color:#94A3B8;font-size:.9rem">Cargando…</span><small style="color:#475569;font-size:.7rem">versión 2026.11.05</small><button id="splashRetry" hidden style="margin-top:6px;padding:10px 16px;border-radius:12px;border:0;background:#3B82F6;color:#fff;font-weight:700">Reintentar</button></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#A855F7"/></linearGradient><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#3B82F6"/></linearGradient><linearGradient id="dg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs></svg>
 <div id="app">
 <header class="top"><div class="wrap">
@@ -324,15 +324,16 @@ nav.tabs button[aria-current="page"] svg{stroke:url(#tg);filter:drop-shadow(0 0 
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Perfiles"><div class="panel glass" id="sheetPanel"></div></div>
 <div class="alarm" id="alarm" role="alertdialog" aria-modal="true"><div class="box"><div class="ic">🚨</div><h2 id="alT" style="margin-top:8px"></h2><p id="alM" style="color:#FECACA"></p><button class="btn primary" id="alOk" style="margin-top:8px">Entendido</button></div></div>
 <div class="toast" id="toast" role="status"></div>
-<script src="config.js"></script>
 <script>
 /* =====================================================================
    La configuración para compartir con la familia vive en config.js
    (junto a este archivo). Así, al actualizar index.html no se pierde.
    Sin config.js la app funciona en modo local (solo este celular).
    ===================================================================== */
-const FIREBASE_CONFIG=(window.PLAN_CONFIG&&window.PLAN_CONFIG.firebase&&window.PLAN_CONFIG.firebase.apiKey&&!/PEGA/.test(window.PLAN_CONFIG.firebase.apiKey))?window.PLAN_CONFIG.firebase:null;
-const ADMIN_EMAIL=((window.PLAN_CONFIG&&window.PLAN_CONFIG.admin)||"").toLowerCase();
+const APP_VERSION="2026.11.05";
+let FIREBASE_CONFIG=null,ADMIN_EMAIL="";
+function readConfig(){FIREBASE_CONFIG=(window.PLAN_CONFIG&&window.PLAN_CONFIG.firebase&&window.PLAN_CONFIG.firebase.apiKey&&!/PEGA/.test(window.PLAN_CONFIG.firebase.apiKey))?window.PLAN_CONFIG.firebase:null;
+ADMIN_EMAIL=((window.PLAN_CONFIG&&window.PLAN_CONFIG.admin)||"").toLowerCase()}
 
 /* ---------- Utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -2252,6 +2253,7 @@ async function fillPhotos(){
 /* ---------- Guía ---------- */
 function renderGuia(){
   $("#v-guia").innerHTML=`<div class="sec"><h2>Guía</h2></div>
+  <p class="small" style="margin:-6px 0 10px">Versión de la app: <b>${APP_VERSION}</b></p>
   <details class="glass" id="libDet"><summary>Ejercicios y videos</summary><div class="in" id="libBox"></div></details>
   <details class="glass" open><summary>Tu horario de comidas</summary><div class="in"><ul><li><b>8:30 am:</b> desayuno</li><li><b>1:00 pm:</b> comida</li><li><b>3:00 pm:</b> snack</li><li><b>7:00 pm:</b> snack libre</li><li><b>9:30 pm:</b> cena</li></ul><p class="small">Niños: desayuno, comida, colación a las 5:30 pm y cena. Cada quien puede cambiar sus horarios en <b>Editar mis datos</b>, y el menú se acomoda a esas horas.</p></div></details>
   <details class="glass"><summary>Cómo funciona el menú de la familia</summary><div class="in"><ul>
@@ -2442,8 +2444,15 @@ $("#whoBtn").onclick=openSheet;
 (function init(){
   const start=(location.hash||"").slice(1);curView=VIEWS.includes(start)?start:"hoy";
   if("serviceWorker" in navigator&&location.protocol==="https:"){try{navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}}
-  if(FIREBASE_CONFIG){show(curView,true);bootCloud();return}
-  localLoad();setSync("Modo local");show(curView,true);rerender();hideSplash();setTimeout(restoreDraft,300);
+  const go=()=>{readConfig();
+    if(FIREBASE_CONFIG){show(curView,true);bootCloud();return}
+    localLoad();setSync("Modo local");show(curView,true);rerender();hideSplash();setTimeout(restoreDraft,300)};
+  if(window.PLAN_CONFIG)return go();
+  /* config.js se carga sin bloquear la pantalla; si tarda más de 8 s seguimos igual */
+  let done=false;const fin=()=>{if(!done){done=true;go()}};
+  const s=document.createElement("script");s.src="config.js?v="+APP_VERSION;s.onload=fin;s.onerror=fin;document.head.appendChild(s);
+  setTimeout(()=>{const m=document.getElementById("splashMsg");if(!done&&m)m.textContent="La señal está lenta, seguimos intentando…"},4000);
+  setTimeout(fin,8000);
 })();
 </script>
 </body>

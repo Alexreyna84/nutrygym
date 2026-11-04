@@ -1,5 +1,5 @@
 /* NutriGym Planner: permite abrir la app rápido con señal lenta y sin internet */
-const V="nutrigym-v1";
+const V="nutrigym-v2";
 const CORE=["./","index.html","config.js","manifest.webmanifest","icon-192.png","icon-512.png"];
 const SDK=["https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js","https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"];
 self.addEventListener("install",e=>{
@@ -17,7 +17,7 @@ self.addEventListener("fetch",e=>{
     e.respondWith((async()=>{
       const cache=await caches.open(V);
       const net=fetch(req).then(r=>{if(r&&r.ok)cache.put(req,r.clone());return r});
-      try{return await Promise.race([net,timeout(4000)])}
+      try{return await Promise.race([net,timeout(req.mode==="navigate"?8000:4000)])}
       catch(err){const hit=await cache.match(req,{ignoreSearch:true})||(req.mode==="navigate"?await cache.match("index.html"):null);if(hit){net.catch(()=>{});return hit}return net}
     })());
     return;
