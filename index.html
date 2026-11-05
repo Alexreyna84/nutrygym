@@ -766,7 +766,7 @@ function pickRoutine(gs,need){
 function swapCands(item,usedIds){
   if(item.cx){const pool=item.g==="hc"?HC_MOVES.map(x=>x[3]):item.g==="hclow"?HC_LOW.map(x=>x[3]):CXP[item.g]||[];return pool.filter(x=>!usedIds.includes(x))}
   const prim=EX[item.id][1][0];
-  if(item.home){const info=I();const pool=[...new Set([...(HG[item.g]||[]).flat(),...Object.keys(EXH).filter(k=>EXH[k][1][0]===prim)])].filter(e=>homeAllowed(e,info));return pool.filter(x=>!usedIds.includes(x))}
+  if(item.home){return HPOOL(item.g).filter(x=>!usedIds.includes(x))}
   const pool=[...new Set([...(G[item.g].slots.flat()),...Object.keys(EX).filter(k=>EX[k][1][0]===prim)])];
   return pool.filter(x=>!usedIds.includes(x)).sort((x,y)=>(EX[y][2].length?1:0)-(EX[x][2].length?1:0));
 }
@@ -784,7 +784,7 @@ function exCard(item,label,prescr,swIdx,note,nameOv){
   const e=EX[item.id];
   return `<div class="ex"><div><div class="pic" data-pic="${item.id}">${body(e[1])}</div><label class="lnk">Agregar imagen<input type="file" accept="image/*" data-exup="${item.id}" hidden></label></div>
   <div><div class="num">${label}</div><h4>${esc(nameOv||e[0])}</h4><div class="rx">${esc(prescr)}</div><div class="mus">${e[1].map(m=>MUS[m]).join(" · ")}</div>${note||""}
-  <div class="acts"><div class="vids">${vidsHTML(item.id)}</div>${swIdx!=null?`<button class="btn sm" data-sw="${swIdx}">⇄ Cambiar ejercicio</button>`:""}</div></div></div>`;
+  <div class="acts"><div class="vids">${vidsHTML(item.id)}</div>${swIdx!=null&&!(item.home&&!swapCands(item,(TS.cur||[]).map(x=>x&&x.id)).length)?`<button class="btn sm" data-sw="${swIdx}">⇄ Cambiar ejercicio</button>`:""}</div></div></div>`;
 }
 function fixedEx(n,ms,p,label){
   return `<div class="ex"><div><div class="pic">${body(ms)}</div></div><div><div class="num">${label}</div><h4>${esc(n)}</h4><div class="rx">${esc(p)}</div><div class="mus">${ms.map(m=>MUS[m]).join(" · ")}</div></div></div>`;
@@ -918,13 +918,64 @@ h_ball_curl:["Curl femoral con pelota de ejercicio",["femoral","gluteo"],"Fácil
 h_ball_puente:["Puente de glúteo con pies en la pelota",["gluteo","femoral"],"Fácil: brazos abiertos en el piso · Difícil: brazos cruzados"],
 h_ball_press:["Press de pecho con mancuernas apoyado en pelota",["pecho","triceps"],"Fácil: ligeras · Difícil: más peso"],
 h_ball_plancha:["Plancha con antebrazos en pelota",["abdomen"],"Fácil: rodillas en el tapete · Difícil: piernas estiradas"],
+h_muneca_inv:["Curl de muñeca inverso con mancuerna",["antebrazo"],"Fácil: ligera · Difícil: bajada lenta"],
+h_agarre:["Agarre estático con mancuernas pesadas",["antebrazo"],"Fácil: 20 s · Difícil: 45 s"],
+h_curl_conc:["Curl concentrado con mancuerna",["biceps"],"Fácil: ligera · Difícil: pausa arriba"],
+h_martillo_cruz:["Curl martillo cruzado con mancuerna",["biceps","antebrazo"],"Fácil: ligera · Difícil: bajada lenta"],
+h_talones_sent:["Elevación de talones sentado con mancuernas en las rodillas",["pantorrilla"],"Fácil: ligeras · Difícil: pausa arriba"],
+h_isom_manc:["Sentadilla isométrica con mancuerna",["cuadriceps"],"Fácil: 20 s · Difícil: 45 s con más peso"],
+h_bulg_manc:["Sentadilla búlgara con mancuernas",["cuadriceps", "gluteo"],"Fácil: ligeras · Difícil: pausa abajo"],
+h_step_manc:["Step-up en silla con mancuernas",["cuadriceps", "gluteo"],"Fácil: escalón bajo · Difícil: silla y más peso"],
+h_ball_wall:["Sentadilla con pelota contra la pared",["cuadriceps", "gluteo"],"Fácil: sin peso · Difícil: con mancuernas"],
+h_patada_manc:["Patada de glúteo con mancuerna detrás de la rodilla",["gluteo"],"Fácil: sin peso · Difícil: más peso y pausa"],
+h_abd_lado:["Abducción de cadera acostado de lado",["gluteo"],"Fácil: sin peso · Difícil: mancuerna sobre el muslo"],
+h_puente_pausa:["Puente de glúteo con pausa de 3 s",["gluteo", "femoral"],"Fácil: sin peso · Difícil: mancuerna en la cadera"],
+h_sumo_manc:["Sentadilla sumo con mancuerna",["gluteo", "cuadriceps"],"Fácil: ligera · Difícil: pausa abajo"],
+h_pm_una_manc:["Peso muerto a una pierna con mancuerna",["femoral", "gluteo"],"Fácil: tocando la pared · Difícil: sin apoyo"],
+h_buenos_manc:["Buenos días con mancuerna en el pecho",["femoral", "espalda"],"Fácil: ligera · Difícil: bajada lenta"],
+h_puente_fem:["Puente de femoral con talones en silla",["femoral", "gluteo"],"Fácil: dos piernas · Difícil: una pierna"],
+h_curl_fem_manc:["Curl femoral boca abajo con mancuerna entre los pies",["femoral"],"Fácil: ligera · Difícil: bajada lenta"],
+h_nordico:["Nórdico asistido en el tapete",["femoral"],"Fácil: baja poco · Difícil: baja lento hasta el piso"],
+h_pms_manc:["Peso muerto sumo con mancuerna",["femoral", "gluteo"],"Fácil: ligera · Difícil: más peso"],
+h_lag_decl:["Lagartijas declinadas con pies en silla",["pecho", "hombro"],"Fácil: silla baja · Difícil: silla alta"],
+h_ball_incl:["Press inclinado en pelota con mancuernas",["pecho", "hombro"],"Fácil: ligeras · Difícil: más peso"],
+h_lag_pausa:["Lagartijas con pausa abajo",["pecho", "triceps"],"Fácil: con rodillas · Difícil: completas"],
+h_squeeze:["Squeeze press con mancuernas en el piso",["pecho", "triceps"],"Fácil: ligeras · Difícil: más peso"],
+h_remo_dos:["Remo inclinado con dos mancuernas",["espalda", "biceps"],"Fácil: ligeras · Difícil: pausa arriba"],
+h_renegado:["Remo renegado en el tapete",["espalda", "abdomen"],"Fácil: rodillas apoyadas · Difícil: piernas estiradas"],
+h_ball_super:["Superman sobre la pelota",["espalda"],"Fácil: brazos cortos · Difícil: brazos estirados"],
+h_ytw:["Y-T-W boca abajo en el tapete",["espalda", "hombro"],"Fácil: sin peso · Difícil: con botellas"],
+h_remo_toalla:["Remo con toalla en el marco de una puerta",["espalda", "biceps"],"Fácil: cuerpo vertical · Difícil: más inclinado"],
+h_arnold:["Press Arnold con mancuernas",["hombro", "triceps"],"Fácil: sentado · Difícil: de pie"],
+h_front_manc:["Elevación frontal alterna con mancuernas",["hombro"],"Fácil: ligeras · Difícil: bajada lenta"],
+h_ball_pajaros:["Pájaros boca abajo sobre la pelota",["hombro", "espalda"],"Fácil: ligeras · Difícil: pausa arriba"],
+h_menton:["Remo al mentón con mancuernas",["hombro", "trapecio"],"Fácil: ligeras · Difícil: más peso"],
+h_ball_curl_inc:["Curl inclinado recargado en la pelota",["biceps"],"Fácil: ligeras · Difícil: bajada lenta"],
+h_curl21:["Curl 21 con mancuernas",["biceps"],"Fácil: ligeras · Difícil: más peso"],
+h_zottman:["Curl Zottman con mancuernas",["biceps", "antebrazo"],"Fácil: ligeras · Difícil: bajada lenta"],
+h_curl_pausa:["Curl con pausa a la mitad",["biceps"],"Fácil: pausa 1 s · Difícil: pausa 3 s"],
+h_press_cerr:["Press cerrado con mancuernas en el piso",["triceps", "pecho"],"Fácil: ligeras · Difícil: más peso"],
+h_fondos_elev:["Fondos en silla con pies elevados",["triceps"],"Fácil: pies en el piso · Difícil: pies en otra silla"],
+h_skull:["Extensión de tríceps acostado con mancuernas",["triceps"],"Fácil: ligeras · Difícil: bajada lenta"],
+h_ext_una:["Extensión a una mano tras nuca con mancuerna",["triceps"],"Fácil: ligera · Difícil: más peso"],
+h_lag_cerr_rod:["Lagartija cerrada con rodillas apoyadas",["triceps", "pecho"],"Fácil: inclinada en la mesa · Difícil: en el piso"],
+h_rot_muneca:["Rotación de muñeca con mancuerna",["antebrazo"],"Fácil: ligera · Difícil: más peso"],
+h_granjero_una:["Caminata del granjero con una mancuerna",["antebrazo", "abdomen"],"Fácil: 30 s · Difícil: 60 s"],
+h_pinza_libros:["Sostener libros o discos con pinza",["antebrazo"],"Fácil: 20 s · Difícil: 45 s"],
+h_exprimir:["Exprimir una pelota pequeña",["antebrazo"],"Fácil: suave · Difícil: con fuerza"],
+h_talones_una_manc:["Talones a una pierna en escalón con mancuerna",["pantorrilla"],"Fácil: sin peso · Difícil: con mancuerna"],
+h_cuerda_suave:["Saltos suaves con cuerda en puntas",["pantorrilla", "cardio"],"Fácil: 20 s · Difícil: 45 s"],
+h_puntitas:["Caminata de puntitas con mancuernas",["pantorrilla"],"Fácil: sin peso · Difícil: con mancuernas"],
+h_talones_iso:["Isometría de talones arriba",["pantorrilla"],"Fácil: 20 s · Difícil: 45 s a una pierna"],
+h_talones_pausa:["Elevación de talones con pausa de 2 s arriba",["pantorrilla"],"Fácil: dos piernas · Difícil: una pierna"],
+h_crunch_inv:["Crunch inverso en el tapete",["abdomen"],"Fácil: rodillas dobladas · Difícil: piernas estiradas"],
 h_jj:["Jumping jacks",["cardio"],"Fácil: sin salto, paso lateral · Difícil: rápidos"],
 h_trote:["Trote en el lugar",["cardio"],"Fácil: caminando rápido · Difícil: rodillas arriba"],
 h_burpee:["Burpees",["cardio","pecho"],"Fácil: sin salto ni lagartija · Difícil: completos"]
 };
 Object.keys(EXH).forEach(k=>{EX[k]=[EXH[k][0],EXH[k][1],[]]});
 const HLIGA=new Set(Object.keys(EXH).filter(k=>EXH[k][3]));
-const HTIME={h_isom:1,h_plancha_lat:1,h_saltos:1,h_granjero:1,h_toalla:1,h_jj:1,h_trote:1,h_curl_iso:1,plancha:1,mountain:1};
+const HTIME={h_isom_manc:1,h_granjero_una:1,h_pinza_libros:1,h_cuerda_suave:1,h_talones_iso:1,h_agarre:1,h_isom:1,h_plancha_lat:1,h_saltos:1,h_granjero:1,h_toalla:1,h_jj:1,h_trote:1,h_curl_iso:1,plancha:1,mountain:1};
 const HG={
 pierna:[["h_sent","h_goblet"],["h_desp","h_desp_manc"],["h_bulg"],["h_isom","h_step"],["h_salto","h_sumo"],["h_step"]],
 gluteo:[["h_puente","h_hip_manc"],["h_sumo","h_ball_puente"],["h_patada"],["h_puente_una"],["h_almeja","h_abd_liga"],["h_bulg"]],
@@ -943,12 +994,12 @@ const LV={prin:{n:"Principiante",r:2,reps:"10–12",t:"20 s"},inter:{n:"Intermed
 const ZONES_H={sup:{t:"Tren superior",g:["pecho","espalda","hombro","biceps","triceps","antebrazo","abdomen"]},inf:{t:"Tren inferior",g:["pierna","gluteo","femoral","pantorrilla"]},car:{t:"Cardio y deporte",g:["cardio_casa","spinning","escaleras","sombra","correr"]}};
 G.cardio_casa={t:"Cardio en casa",s:"Sin equipo",out:true};
 function homeAllowed(id,info){return !HLIGA.has(id)}
+const HABS=["plancha","crunch","bicicleta","mountain","elev_piernas","giros_rusos","plancha_toque"];
+function HPOOL(g){const m=(GM[g]||[g])[0];return [...Object.keys(EXH).filter(k=>EXH[k][1][0]===m&&!HLIGA.has(k)),...(g==="abdomen"?HABS.filter(k=>EX[k]&&EX[k][1][0]==="abdomen"):[])]}
 function homePick(plan,info){
   const r=rng(hash("casa|"+plan.map(x=>x.g).join("+")+"|"+blockIdx+"|"+S.cur));const used=new Set();
-  return plan.map(x=>{const all=[...new Set(HG[x.g].flat())].filter(e=>homeAllowed(e,info)),items=[];
-    for(let i=0;i<x.n;i++){let pool=(HG[x.g][i]||[]).filter(e=>!used.has(e)&&homeAllowed(e,info));if(!pool.length)pool=all.filter(e=>!used.has(e));if(!pool.length)break;
-      const id=pool[Math.floor(r()*pool.length)];used.add(id);items.push({id,g:x.g,home:true})}
-    return{g:x.g,items}});
+  return plan.map(x=>{const pool=HPOOL(x.g).filter(e=>!used.has(e));const sh=[...pool].sort(()=>r()-.5);
+    const items=sh.slice(0,x.n).map(id=>{used.add(id);return{id,g:x.g,home:true}});return{g:x.g,items}});
 }
 function homeRx(id,lv){const L=LV[lv];return HTIME[id]?L.t:L.reps+" reps"}
 function homeNote(id){return EXH[id]?`<div class="pair">${esc(EXH[id][2])}</div>`:""}
@@ -1014,26 +1065,27 @@ function renderHomeTrain(){
   let n=1,blocksH="",timeTags="";
   if(st.modeCasa==="fuerza"){
     let lay=homeStrength(null,M,lv);const N=lay.reduce((a,b)=>a+b,0);
-    const capOf=g=>[...new Set(HG[g].flat())].filter(e=>homeAllowed(e,info)).length;
+    const capOf=g=>Math.max(1,HPOOL(g).length-3);
     const cnt=order.map(g=>Math.min(capOf(g),Math.max(1,Math.round(N*G[g].w/totW))));let sum=cnt.reduce((a,b)=>a+b,0);
     while(sum>N&&cnt.some(x=>x>1)){const i=cnt.indexOf(Math.max(...cnt));cnt[i]--;sum--}
     for(let guard=0;sum<N&&guard<50;guard++){const i=order.findIndex((g,j)=>cnt[j]<capOf(g));if(i<0)break;cnt[i]++;sum++}
+    const SER=sum<N?4:3;
     if(sum<N){lay=[];let s2=0,k=0;while(s2+[2,3][k%2]<=sum){lay.push([2,3][k%2]);s2+=[2,3][k%2];k++}const r=sum-s2;if(r===1){if(lay.length&&lay[lay.length-1]===2)lay[lay.length-1]=3;else if(lay.length){lay[lay.length-1]=2;lay.push(2)}else lay.push(1)}else if(r===2)lay.push(2)}
     const per=homePick(order.map((g,i)=>({g,n:cnt[i]})),info);let items=[];per.forEach(x=>x.items.forEach(it=>items.push(it)));
     items=items.map((it,k)=>TS.swap[k]?{id:TS.swap[k],g:it.g,home:true}:it);TS.cur=items.slice();
     const okC=it=>it&&!HTIME[it.id]&&!ABS.has(it.id);let pos=0,bi=0,ti=0;
     lay.forEach(size=>{const chunk=items.slice(pos,pos+size);const off=pos;pos+=size;if(!chunk.length)return;
       const title=chunk.length===3?"Triserie "+(++ti):chunk.length===2?"Biserie "+(++bi):"Individual";
-      timeTags+=`<span class="tag c" style="margin:0">${title} · ${chunk.length===3?10:6} min</span>`;
-      blocksH+=`<div class="glass block"><div class="bhead"><h3>${title} · ${esc([...new Set(chunk.map(it=>G[it.g].t))].join(" + "))}</h3><span>3 series · sin pausa</span></div>`+
+      timeTags+=`<span class="tag c" style="margin:0">${title} · ${chunk.length===3?(SER===4?13:10):(SER===4?8:6)} min</span>`;
+      blocksH+=`<div class="glass block"><div class="bhead"><h3>${title} · ${esc([...new Set(chunk.map(it=>G[it.g].t))].join(" + "))}</h3><span>${SER} series · sin pausa</span></div>`+
       chunk.map((it,j)=>{const idx=off+j,clu=idx===0&&okC(it);
-        const pr=clu?"3 series de 10 + 10 + 10 reps":HTIME[it.id]?"3 series × "+LV[lv].t:"3 series × "+reps+" reps";
+        const pr=clu?SER+" series de 10 + 10 + 10 reps":HTIME[it.id]?SER+" series × "+LV[lv].t:SER+" series × "+reps+" reps";
         const note=clu?`<div class="pair" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);border-radius:10px;padding:6px 9px">Ejercicio principal: 10 reps, descansas 10 s, 10 reps, descansas 10 s, 10 reps. Eso es <b>una serie</b>.</div>`:homeNote(it.id);
         return exCard(it,"Ejercicio "+(++n),pr,idx,note)}).join("")+`<div class="restline">Al terminar el bloque descansa 60–90 s</div></div>`;
     });
   }else{
     const L=LV[lv],mpe=L.r*1.1,strMin=M-6;
-    const plan=order.map(g=>({g,n:Math.max(1,Math.round(strMin*G[g].w/totW/mpe))}));
+    const plan=order.map(g=>({g,n:Math.min(Math.max(1,HPOOL(g).length-3),Math.max(1,Math.round(strMin*G[g].w/totW/mpe)))}));
     const per=homePick(plan,info);let items=[];per.forEach(x=>x.items.forEach(it=>items.push(it)));
     items=items.map((it,k)=>TS.swap[k]?{id:TS.swap[k],g:it.g,home:true}:it);TS.cur=items.slice();
     const k=Math.max(1,Math.ceil(items.length/6));let pos=0,rest=items.length;
@@ -1044,7 +1096,7 @@ function renderHomeTrain(){
   html+=`<div class="meta"><span>Rutina: <b>${esc(TS.groups.map(g=>G[g].t).join(" + "))}</b></span><span>Duración: <b>${T} min</b></span></div>
   <div class="card glass" style="padding:12px 14px"><div class="small" style="margin-bottom:6px">Reparto del tiempo</div><div class="chips" style="margin:0"><span class="tag" style="margin:0">Calentamiento 3 min</span>${timeTags}${C?`<span class="tag" style="margin:0">${esc(G[cardG].t)} · ${C} min</span>`:""}<span class="tag" style="margin:0">Estiramiento 3 min</span></div></div>
   <div class="motiv"><small>Antes de empezar</small>${esc(motiv)}</div>
-  <div class="rule glass">${st.modeCasa==="fuerza"?`Mismas reglas que en el gimnasio: sin pausa entre ejercicios y 60–90 s de descanso al terminar cada bloque. 3 series de ${reps} repeticiones; solo el ejercicio principal va en bloques de 10 + 10 + 10.`:`Circuito: todos los ejercicios seguidos, ${LV[lv].r} vueltas; descansa 60–90 s al terminar cada vuelta.`} Usa mancuernas, pelota, tapete o tu peso corporal.</div>
+  <div class="rule glass">${st.modeCasa==="fuerza"?`Mismas reglas que en el gimnasio: sin pausa entre ejercicios y 60–90 s de descanso al terminar cada bloque. 3 o 4 series de ${reps} repeticiones; solo el ejercicio principal va en bloques de 10 + 10 + 10.`:`Circuito: todos los ejercicios seguidos, ${LV[lv].r} vueltas; descansa 60–90 s al terminar cada vuelta.`} Usa mancuernas, pelota, tapete o tu peso corporal.</div>
   <div class="glass block"><div class="bhead"><h3>Calentamiento</h3><span>3 min</span></div>${fixedEx("Movilidad y jumping jacks suaves",["cardio"],"3 min: hombros, cadera, tobillos y 1 min de jumping jacks","Ejercicio 1")}</div>`+blocksH;
   if(cardG){const cp=homeOut(cardG,C+8,lv,true).filter(b=>!/Calentamiento|Enfriamiento|Progresión|Cuerda|Core|Remate|Estiramiento/.test(b.h));
     html+=`<div class="sec"><h2>${esc(G[cardG].t)} · ${C} min</h2></div>`+outBlocksHTML(cp,TS.cur.length,n);}
@@ -1837,12 +1889,21 @@ const DEF_HOR={d:"08:30",c:"13:00",s1:"15:00",s2:"19:00",n:"21:30"};
 const toMin=t=>{const [h,m]=String(t||"0:0").split(":").map(Number);return h*60+(m||0)};
 const toHM=m=>pad(Math.floor(m/60)%24)+":"+pad(m%60);
 const lbl=t=>{let [h,m]=String(t).split(":").map(Number);const ap=h>=12?"pm":"am";h=h%12||12;return h+":"+pad(m||0)+" "+ap};
-function horOf(p){const st=p.settings||{};const h=Object.assign({},DEF_HOR,st.hor||{});
+function famAdults(){return S.order.map(id=>S.profiles[id]).filter(x=>x&&x.info.familia&&!isMinor(x.info))}
+function casaLead(){return famAdults().find(x=>x.info.grupo==="casa")||null}
+function dinnerOwner(){const f=famAdults();return f.find(x=>ADMIN_EMAIL&&x.info.email===ADMIN_EMAIL)||S.profiles.alejandro||f.find(x=>x.info.grupo!=="casa")||f[0]||null}
+function horOf(p){const own=horOwn(p);if(!p.info.familia)return own;
+  const h=Object.assign({},own);const L=casaLead(),O=dinnerOwner();
+  if(p.info.grupo==="casa"&&isMinor(p.info)&&L&&L!==p){const lh=horOwn(L);["d","c","s1","s2"].forEach(k=>h[k]=lh[k])}
+  if(O&&O!==p)h.n=horOwn(O).n;
+  return h}
+function horOwn(p){const st=p.settings||{};const h=Object.assign({},DEF_HOR,st.hor||{});
   if(st.snackMode==="entre"){h.s1=toHM(Math.round((toMin(h.d)+toMin(h.c))/2/5)*5);h.s2=toHM(Math.round((toMin(h.c)+toMin(h.n))/2/5)*5)}
   return h}
 function mealsOf(p){const i=p.info;const base=isKid(i)||(isMinor(i)&&!calc(p))?MK_KID:MK;
   const h=horOf(p);
-  return base.map(m=>Object.assign({},m,h[m.k]&&!m.kid?{h:lbl(h[m.k]),m:toMin(h[m.k])}:{})).sort((a,b)=>a.m-b.m)}
+  const kidT=i.familia&&i.grupo==="casa"&&casaLead()&&casaLead()!==p?h.s1:null;
+  return base.map(m=>Object.assign({},m,h[m.k]&&!m.kid?{h:lbl(h[m.k]),m:toMin(h[m.k])}:m.kid&&kidT?{h:lbl(kidT),m:toMin(kidT)}:{})).sort((a,b)=>a.m-b.m)}
 
 /* ---------- Descargar menú semanal (imagen compacta) ---------- */
 function weekMenuRows(p,k0){
@@ -1976,7 +2037,7 @@ function mealsHTML(meals,p,h,f,can,adult,D,B){
     const T=tgt(B,m.k,item,f);
     const kcal=adult&&!m.kid?(m.snack?item[1]:isDish?recipe(item,T).kcal:libre&&B.k[m.k]?B.k[m.k]:item[2]):null;
     const done=(h.ate||{})[m.k]!=null;
-    const canChange=scope?(S.mode==="local"||S.inFamily):can;
+    const canChange=scope?((S.mode==="local"||S.inFamily)&&famCanChange(p,m.k,scope)):can;
     const k=dishKey(item);
     const sub=m.snack?`<span class="tag c" style="margin:0 6px 0 0">${snType(item)}</span>con ${esc(item[2])}`:fuera||libre?esc(item[1]):"";
     return `<div class="card glass meal${m.k===nextK?" next":""}"><div class="time">${m.h}</div>
@@ -1990,6 +2051,7 @@ function mealsHTML(meals,p,h,f,can,adult,D,B){
       </div></div>`;
   }).join("");
 }
+function famCanChange(p,mk,scope){const i=p.info;if(!i.familia)return true;if(isMinor(i)&&scope)return false;if(mk==="n"&&scope==="todos")return i.grupo!=="casa";return true}
 function familyMenuHTML(D){
   const blocks=[];
   [["d","Desayuno"],["c","Comida"],["n","Cena"]].forEach(([mk,t])=>{
@@ -1998,7 +2060,7 @@ function familyMenuHTML(D){
     const mem=familyMembers(sc);if(!mem.length)return;
     blocks.push(`<details class="card glass famd"><summary><span class="small">${t} · ${sc==="todos"?"toda la familia":mem.map(x=>esc(x.info.nombre)).join(", ")}</span><b>${esc(item[0])}</b></summary>
     ${libre?`<p class="small">${esc(item[1])}</p>`:mem.map(m=>{const ff=pfac(m),cc=calc(m),r=recipe(item,tgt(budgetFor(m,getDay(D.k,m),D),mk,item,ff));return `<div class="famrow"><b>${esc(m.info.nombre)}</b> <span class="small">${isKid(m.info)?"porción de niño":(cc?"su porción":"porción ×"+f1(ff))}${cc?" · "+fmt(r.kcal)+" kcal":""}</span><div class="small">${r.lines.map(esc).join(" · ")}</div></div>`}).join("")}
-    ${!libre&&(S.mode==="local"||S.inFamily)?`<div class="acts"><button class="btn sm" data-off="${mk}" data-scope="${sc}">⇄ Cambiar platillo</button></div>`:""}</details>`);
+    ${!libre&&(S.mode==="local"||S.inFamily)&&famCanChange(P(),mk,sc)?`<div class="acts"><button class="btn sm" data-off="${mk}" data-scope="${sc}">⇄ Cambiar platillo</button></div>`:""}</details>`);
   });
   return `<div class="sec"><h2>Menú de la familia</h2><span class="note">${D.wk?(D.sat?"Sábado: cena libre":"Domingo: comida libre"):"Toca para ver porciones"}</span></div>`+blocks.join("");
 }
@@ -2364,7 +2426,7 @@ function restoreDraft(){let d=null;try{d=JSON.parse(localStorage.getItem(DKEY())
 function openEditor(id,isNew,limited,draft){
   const p=S.profiles[id],i=p.info;const full=!limited&&canEditInfo(p);
   const plus=m=>{const d=new Date(now);d.setMonth(d.getMonth()+m);return ymd(d)};
-  const H=horOf(p),sm=(p.settings||{}).snackMode==="entre"?"entre":"libre";const LB=libresOf(p)||["",""];
+  const H=horOf(p),HO=horOwn(p),sm=(p.settings||{}).snackMode==="entre"?"entre":"libre";const LB=libresOf(p)||["",""];
   const libOpt=["1d","1c","1n","2d","2c","2n","3d","3c","3n","4d","4c","4n","5d","5c","5n","6d","6c","6n","0d","0c","0n"].map(x=>[x,cap(DIAS[+x[0]])+" · "+({d:"desayuno",c:"comida",n:"cena"})[x[1]]]);libOpt.unshift(["","— Elige —"]);
   const sel=(id2,opts,val)=>`<select id="${id2}">${opts.map(o=>`<option value="${o[0]}" ${val===o[0]?"selected":""}>${o[1]}</option>`).join("")}</select>`;
   const pn=$("#sheetPanel");
@@ -2388,10 +2450,12 @@ function openEditor(id,isNew,limited,draft){
    <label class="fl">Días de ejercicio por semana<input type="number" id="eDias" min="0" max="7" value="${esc(i.dias)}"></label>
    <label class="fl">Minutos de caminata al día<input type="number" id="eCam" min="10" max="120" step="5" value="${esc(i.caminata||30)}"></label></div>
   <h4 class="edh">Horarios de comida</h4>
-   <div class="chips" role="group" aria-label="Snacks"><button class="chip" data-sm="entre" aria-pressed="${sm==="entre"}">1 snack entre cada comida</button><button class="chip" data-sm="libre" aria-pressed="${sm==="libre"}">2 snacks a la hora que yo elija</button></div>
-   <div class="grid2" style="margin-top:8px"><label class="fl">Desayuno<input type="time" id="hD" value="${H.d}"></label><label class="fl">Comida<input type="time" id="hC" value="${H.c}"></label><label class="fl">Cena<input type="time" id="hN" value="${H.n}"></label>
+  ${(()=>{const L=casaLead(),O=dinnerOwner();const kidCasa=i.familia&&i.grupo==="casa"&&isMinor(i)&&L&&L.id!==p.id;const lockN=i.familia&&O&&O.id!==p.id;
+   if(kidCasa)return `<p class="small">Sus horarios de desayuno, comida y snacks son los de <b>${esc(L.info.nombre)}</b>, y cena a la hora de la familia (${lbl(H.n)}).</p>`;
+   return `<div class="chips" role="group" aria-label="Snacks"><button class="chip" data-sm="entre" aria-pressed="${sm==="entre"}">1 snack entre cada comida</button><button class="chip" data-sm="libre" aria-pressed="${sm==="libre"}">2 snacks a la hora que yo elija</button></div>
+   <div class="grid2" style="margin-top:8px"><label class="fl">Desayuno<input type="time" id="hD" value="${H.d}"></label><label class="fl">Comida<input type="time" id="hC" value="${H.c}"></label><label class="fl">Cena<input type="time" id="hN" value="${H.n}" ${lockN?"disabled":""}></label>
    <label class="fl">Snack 1<input type="time" id="hS1" value="${H.s1}" ${sm==="entre"?"disabled":""}></label><label class="fl">Snack 2<input type="time" id="hS2" value="${H.s2}" ${sm==="entre"?"disabled":""}></label></div>
-   <p class="small">Con “1 snack entre cada comida”, los snacks se acomodan solos a la mitad entre desayuno y comida, y entre comida y cena.</p>
+   <p class="small">${lockN?`La cena es a la misma hora para toda la familia (la define ${esc(O.info.nombre)}). `:""}${i.familia&&i.grupo==="casa"&&!isMinor(i)?"Tus horarios de desayuno, comida y snacks también aplican para los niños. ":""}Con “1 snack entre cada comida”, los snacks se acomodan solos a la mitad entre comidas.</p>`})()}
   ${!i.familia?`<h4 class="edh">Comidas libres (elige 2 a la semana)</h4><div class="grid2"><label class="fl">Comida libre 1${sel("eL1",libOpt,LB[0])}</label><label class="fl">Comida libre 2${sel("eL2",libOpt,LB[1]||"")}</label></div>`:`<p class="small">Comidas libres de la familia: cena del sábado y comida del domingo.</p>`}
   ${!full&&i.boxeo?`<h4 class="edh">Boxeo</h4><div class="grid2"><label class="fl">Peso de mantenimiento (kg)<input type="number" id="ePM" step="0.1" value="${esc(i.pesoMant||"")}"></label><label class="fl">Peso de pelea (kg)<input type="number" id="ePP" step="0.1" value="${esc(i.pesoPelea||"")}"></label><label class="fl">Fecha de la próxima pelea<input type="date" id="eFP" value="${esc(i.fechaPelea||"")}"></label></div><p class="small">Dos meses antes de la pelea el plan cambia solo para llegar a tu peso de pelea.</p>`:""}
   ${full?`<h4 class="edh">Familia y menú</h4><div class="grid2"><label class="fl">Desayuno y comida entre semana${sel("eGrupo",[["casa","En casa, igual que Claudia y los niños"],["fuera","Su propio menú"]],i.grupo==="casa"?"casa":"fuera")}</label></div>
@@ -2414,7 +2478,7 @@ function openEditor(id,isNew,limited,draft){
     if(full)Object.assign(i,{email:v("#eMail").toLowerCase(),grupo:v("#eGrupo")||"fuera",familia:chk("#eFam",i.familia),boxeo:chk("#eBox",i.boxeo)});
     if(el("#ePP"))Object.assign(i,{pesoPelea:num("#ePP"),pesoMant:num("#ePM"),fechaPelea:v("#eFP")});
     if(el("#eL1")&&(v("#eL1")||v("#eL2"))){p.settings=p.settings||{};const l=[v("#eL1"),v("#eL2")].filter((x,n,a)=>x&&a.indexOf(x)===n);if(l.length<2){toast("Elige 2 comidas libres distintas");return}p.settings.libres=l}
-    if(el("#hD")){p.settings=p.settings||{};p.settings.hor={d:v("#hD")||DEF_HOR.d,c:v("#hC")||DEF_HOR.c,n:v("#hN")||DEF_HOR.n,s1:v("#hS1")||DEF_HOR.s1,s2:v("#hS2")||DEF_HOR.s2};if(pn.dataset.sm)p.settings.snackMode=pn.dataset.sm;saveSettings(p)}
+    if(el("#hD")){p.settings=p.settings||{};p.settings.hor={d:v("#hD")||DEF_HOR.d,c:v("#hC")||DEF_HOR.c,n:(el("#hN")&&!el("#hN").disabled?v("#hN"):(horOwn(p).n))||DEF_HOR.n,s1:v("#hS1")||DEF_HOR.s1,s2:v("#hS2")||DEF_HOR.s2};if(pn.dataset.sm)p.settings.snackMode=pn.dataset.sm;saveSettings(p)}
     const peso=num("#ePeso");
     if(peso&&peso!==lastPeso(p)){i.peso=peso;p.medidas=(p.medidas||[]).filter(r=>r.f!==today);p.medidas.push({f:today,peso});saveMedidas(p)}else if(peso)i.peso=peso;
     if(isMinor(i)){if(age(i)<16)i.objetivo="crecer";else if(i.objetivo==="bajar"||i.objetivo==="crecer")i.objetivo=i.objetivo==="crecer"?"crecer":"mantener";i.pesoMeta="";i.fechaMeta=""}
