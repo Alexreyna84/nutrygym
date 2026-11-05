@@ -299,7 +299,7 @@ nav.tabs button[aria-current="page"] svg{stroke:url(#tg);filter:drop-shadow(0 0 
 </style>
 </head>
 <body>
-<div id="splash" style="position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0A0A;color:#F1F5F9;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3B82F6,#A855F7);display:grid;place-items:center;font-weight:800">NG</div><b style="font-size:1.2rem">NutriGym Planner</b><span id="splashMsg" style="color:#94A3B8;font-size:.9rem">Cargando…</span><small style="color:#475569;font-size:.7rem">versión 2026.11.05</small><button id="splashRetry" hidden style="margin-top:6px;padding:10px 16px;border-radius:12px;border:0;background:#3B82F6;color:#fff;font-weight:700">Reintentar</button></div>
+<div id="splash" style="position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0A0A;color:#F1F5F9;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3B82F6,#A855F7);display:grid;place-items:center;font-weight:800">NG</div><b style="font-size:1.2rem">NutriGym Planner</b><span id="splashMsg" style="color:#94A3B8;font-size:.9rem">Cargando…</span><small style="color:#475569;font-size:.7rem">versión 2026.11.06</small><button id="splashRetry" hidden style="margin-top:6px;padding:10px 16px;border-radius:12px;border:0;background:#3B82F6;color:#fff;font-weight:700">Reintentar</button></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#A855F7"/></linearGradient><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#3B82F6"/></linearGradient><linearGradient id="dg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B82F6"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs></svg>
 <div id="app">
 <header class="top"><div class="wrap">
@@ -330,7 +330,7 @@ nav.tabs button[aria-current="page"] svg{stroke:url(#tg);filter:drop-shadow(0 0 
    (junto a este archivo). Así, al actualizar index.html no se pierde.
    Sin config.js la app funciona en modo local (solo este celular).
    ===================================================================== */
-const APP_VERSION="2026.11.05";
+const APP_VERSION="2026.11.06";
 let FIREBASE_CONFIG=null,ADMIN_EMAIL="";
 function readConfig(){FIREBASE_CONFIG=(window.PLAN_CONFIG&&window.PLAN_CONFIG.firebase&&window.PLAN_CONFIG.firebase.apiKey&&!/PEGA/.test(window.PLAN_CONFIG.firebase.apiKey))?window.PLAN_CONFIG.firebase:null;
 ADMIN_EMAIL=((window.PLAN_CONFIG&&window.PLAN_CONFIG.admin)||"").toLowerCase()}
@@ -852,150 +852,134 @@ function outPlan(gk,time){
 /* =====================================================================
    ENTRENAMIENTO EN CASA (sin máquinas) Y PERFILES QUE NO ENTRENAN
    ===================================================================== */
+/* Fuerza en casa: solo mancuernas, ligas, kettlebell, barra de dominadas, tapete y polainas */
 const EXH={
-h_sent:["Sentadilla con peso corporal",["cuadriceps","gluteo"],"Fácil: siéntate y levántate de una silla · Difícil: con mochila o garrafón"],
-h_desp:["Desplantes alternados",["cuadriceps","gluteo"],"Fácil: sujetándote de una pared · Difícil: con garrafones en las manos"],
-h_bulg:["Sentadilla búlgara con pie en silla",["cuadriceps","gluteo"],"Fácil: baja poco · Difícil: con mochila"],
-h_isom:["Sentadilla isométrica en pared",["cuadriceps"],"Fácil: rodillas poco dobladas · Difícil: muslos paralelos al piso"],
-h_step:["Subir a escalón o silla firme",["cuadriceps","gluteo"],"Fácil: escalón bajo · Difícil: silla, con garrafón"],
-h_sumo:["Sentadilla sumo con garrafón",["gluteo","cuadriceps"],"Fácil: sin peso · Difícil: garrafón lleno y pausa abajo"],
-h_salto:["Sentadilla con salto",["cuadriceps","cardio"],"Fácil: sentadilla rápida sin salto · Difícil: salto alto y aterrizaje suave"],
-h_puente:["Puente de glúteo",["gluteo","femoral"],"Fácil: sin peso · Difícil: con mochila sobre la cadera"],
-h_puente_una:["Puente de glúteo a una pierna",["gluteo","femoral"],"Fácil: con las dos piernas · Difícil: pie sobre una silla"],
-h_patada:["Patada de glúteo en cuadrupedia",["gluteo"],"Fácil: rodilla doblada · Difícil: con liga en los tobillos"],
-h_almeja:["Almejas acostado de lado",["gluteo"],"Fácil: sin liga · Difícil: con liga arriba de las rodillas"],
-h_abd_liga:["Caminata lateral con liga",["gluteo"],"Fácil: liga suave · Difícil: liga fuerte y más abajo",true],
-h_pmr:["Peso muerto rumano con garrafón o mochila",["femoral","gluteo"],"Fácil: sin peso · Difícil: garrafones llenos"],
-h_pm_una:["Peso muerto a una pierna",["femoral","gluteo"],"Fácil: tocando la pared · Difícil: con garrafón"],
-h_curl_toalla:["Curl femoral con toalla en piso liso",["femoral"],"Fácil: con las dos piernas · Difícil: a una pierna"],
-h_buenos_liga:["Buenos días con liga",["femoral","espalda"],"Fácil: liga suave · Difícil: liga fuerte",true],
-h_lag:["Lagartijas",["pecho","triceps"],"Fácil: en la pared o con rodillas · Difícil: pies sobre una silla"],
-h_lag_inc:["Lagartijas inclinadas en mesa o silla",["pecho","triceps"],"Fácil: manos en la mesa · Difícil: manos en una silla baja"],
-h_lag_ab:["Lagartijas con manos abiertas",["pecho"],"Fácil: con rodillas · Difícil: bajada lenta de 3 segundos"],
-h_aper:["Aperturas en el piso con botellas",["pecho"],"Fácil: botellas chicas · Difícil: garrafones"],
-h_press_liga:["Press de pecho con liga",["pecho","triceps"],"Fácil: liga suave · Difícil: liga fuerte",true],
-h_remo:["Remo inclinado con mochila o garrafón",["espalda","biceps"],"Fácil: mochila ligera · Difícil: mochila llena y pausa arriba"],
-h_remo_una:["Remo a una mano apoyado en silla",["espalda"],"Fácil: garrafón medio · Difícil: garrafón lleno"],
-h_superman:["Superman en el piso",["espalda"],"Fácil: sube solo brazos · Difícil: brazos y piernas con pausa"],
-h_remo_mesa:["Remo invertido bajo una mesa firme",["espalda","biceps"],"Fácil: rodillas dobladas · Difícil: piernas estiradas"],
-h_jalon_liga:["Jalón con liga sujeta arriba",["espalda","biceps"],"Fácil: liga suave · Difícil: liga fuerte",true],
-h_press_hombro:["Press de hombro con botellas o garrafones",["hombro","triceps"],"Fácil: botellas · Difícil: garrafones"],
-h_lat:["Elevaciones laterales con botellas",["hombro"],"Fácil: botellas chicas · Difícil: botellas grandes y bajada lenta"],
-h_pike:["Lagartija pica (pike push-up)",["hombro","triceps"],"Fácil: poca inclinación · Difícil: pies sobre una silla"],
-h_pajaros:["Pájaros inclinado con botellas",["hombro","espalda"],"Fácil: sin peso · Difícil: botellas grandes"],
-h_front:["Elevación frontal con garrafón",["hombro"],"Fácil: garrafón medio · Difícil: garrafón lleno"],
-h_curl:["Curl de bíceps con garrafón o mochila",["biceps"],"Fácil: garrafón medio · Difícil: garrafón lleno y bajada lenta"],
-h_martillo:["Curl martillo con botellas",["biceps","antebrazo"],"Fácil: botellas chicas · Difícil: garrafones"],
-h_curl_liga:["Curl con liga",["biceps"],"Fácil: liga suave · Difícil: liga fuerte",true],
-h_curl_iso:["Curl isométrico con toalla",["biceps"],"Fácil: jala suave · Difícil: jala con fuerza 30 s"],
-h_fondos:["Fondos en silla",["triceps","pecho"],"Fácil: rodillas dobladas · Difícil: piernas estiradas"],
-h_lag_diam:["Lagartijas diamante",["triceps","pecho"],"Fácil: con rodillas · Difícil: en el piso completo"],
-h_tras_nuca:["Extensión tras nuca con garrafón",["triceps"],"Fácil: botella · Difícil: garrafón lleno"],
-h_patada_tri:["Patada de tríceps con botella",["triceps"],"Fácil: botella chica · Difícil: garrafón"],
-h_plancha_lat:["Plancha lateral",["abdomen"],"Fácil: con rodillas apoyadas · Difícil: piernas estiradas"],
-h_dead_bug:["Dead bug (bicho muerto)",["abdomen"],"Fácil: solo piernas · Difícil: brazos y piernas lento"],
-h_talones:["Elevación de talones en escalón",["pantorrilla"],"Fácil: en el piso · Difícil: en escalón con mochila"],
-h_talones_una:["Elevación de talones a una pierna",["pantorrilla"],"Fácil: sujetándote de la pared · Difícil: con garrafón"],
-h_saltos:["Saltos en puntas",["pantorrilla","cardio"],"Fácil: saltos pequeños · Difícil: rápidos y continuos"],
-h_granjero:["Caminata del granjero con garrafones",["antebrazo","trapecio"],"Fácil: garrafones medios · Difícil: llenos"],
-h_toalla:["Exprimir una toalla mojada",["antebrazo"],"Fácil: suave · Difícil: con toda la fuerza"],
-h_muneca:["Curl de muñeca con botella",["antebrazo"],"Fácil: botella chica · Difícil: botella grande"],
-h_goblet:["Sentadilla goblet con mancuerna",["cuadriceps","gluteo"],"Fácil: mancuerna ligera · Difícil: pausa de 2 s abajo"],
-h_desp_manc:["Desplantes con mancuernas",["cuadriceps","gluteo"],"Fácil: sin peso · Difícil: mancuernas pesadas"],
-h_hip_manc:["Hip thrust en el piso con mancuerna",["gluteo","femoral"],"Fácil: sin peso · Difícil: mancuerna pesada y pausa arriba"],
-h_pmr_manc:["Peso muerto rumano con mancuernas",["femoral","gluteo"],"Fácil: mancuernas ligeras · Difícil: bajada lenta de 3 s"],
-h_press_piso:["Press de pecho en el piso con mancuernas",["pecho","triceps"],"Fácil: mancuernas ligeras · Difícil: pausa abajo"],
-h_aper_manc:["Aperturas con mancuernas en el piso",["pecho"],"Fácil: ligeras · Difícil: bajada lenta"],
-h_remo_manc:["Remo con mancuerna a una mano",["espalda","biceps"],"Fácil: apoyado en silla · Difícil: pausa arriba"],
-h_pull_manc:["Pullover con mancuerna en el piso",["espalda","pecho"],"Fácil: ligera · Difícil: más peso y bajada lenta"],
-h_press_manc:["Press de hombro con mancuernas",["hombro","triceps"],"Fácil: sentado · Difícil: de pie"],
-h_lat_manc:["Elevaciones laterales con mancuernas",["hombro"],"Fácil: ligeras · Difícil: bajada lenta"],
-h_curl_manc:["Curl de bíceps con mancuernas",["biceps"],"Fácil: alterno · Difícil: los dos brazos y bajada lenta"],
-h_ext_manc:["Extensión de tríceps con mancuerna tras nuca",["triceps"],"Fácil: ligera · Difícil: más peso"],
-h_talones_manc:["Elevación de talones con mancuernas",["pantorrilla"],"Fácil: en el piso · Difícil: en escalón"],
-h_ball_crunch:["Crunch en pelota de ejercicio",["abdomen"],"Fácil: pelota cerca de la cadera · Difícil: pelota en la espalda baja"],
-h_ball_curl:["Curl femoral con pelota de ejercicio",["femoral","gluteo"],"Fácil: con las dos piernas · Difícil: a una pierna"],
-h_ball_puente:["Puente de glúteo con pies en la pelota",["gluteo","femoral"],"Fácil: brazos abiertos en el piso · Difícil: brazos cruzados"],
-h_ball_press:["Press de pecho con mancuernas apoyado en pelota",["pecho","triceps"],"Fácil: ligeras · Difícil: más peso"],
-h_ball_plancha:["Plancha con antebrazos en pelota",["abdomen"],"Fácil: rodillas en el tapete · Difícil: piernas estiradas"],
-h_muneca_inv:["Curl de muñeca inverso con mancuerna",["antebrazo"],"Fácil: ligera · Difícil: bajada lenta"],
-h_agarre:["Agarre estático con mancuernas pesadas",["antebrazo"],"Fácil: 20 s · Difícil: 45 s"],
-h_curl_conc:["Curl concentrado con mancuerna",["biceps"],"Fácil: ligera · Difícil: pausa arriba"],
-h_martillo_cruz:["Curl martillo cruzado con mancuerna",["biceps","antebrazo"],"Fácil: ligera · Difícil: bajada lenta"],
-h_talones_sent:["Elevación de talones sentado con mancuernas en las rodillas",["pantorrilla"],"Fácil: ligeras · Difícil: pausa arriba"],
-h_isom_manc:["Sentadilla isométrica con mancuerna",["cuadriceps"],"Fácil: 20 s · Difícil: 45 s con más peso"],
-h_bulg_manc:["Sentadilla búlgara con mancuernas",["cuadriceps", "gluteo"],"Fácil: ligeras · Difícil: pausa abajo"],
-h_step_manc:["Step-up en silla con mancuernas",["cuadriceps", "gluteo"],"Fácil: escalón bajo · Difícil: silla y más peso"],
-h_ball_wall:["Sentadilla con pelota contra la pared",["cuadriceps", "gluteo"],"Fácil: sin peso · Difícil: con mancuernas"],
-h_patada_manc:["Patada de glúteo con mancuerna detrás de la rodilla",["gluteo"],"Fácil: sin peso · Difícil: más peso y pausa"],
-h_abd_lado:["Abducción de cadera acostado de lado",["gluteo"],"Fácil: sin peso · Difícil: mancuerna sobre el muslo"],
-h_puente_pausa:["Puente de glúteo con pausa de 3 s",["gluteo", "femoral"],"Fácil: sin peso · Difícil: mancuerna en la cadera"],
-h_sumo_manc:["Sentadilla sumo con mancuerna",["gluteo", "cuadriceps"],"Fácil: ligera · Difícil: pausa abajo"],
-h_pm_una_manc:["Peso muerto a una pierna con mancuerna",["femoral", "gluteo"],"Fácil: tocando la pared · Difícil: sin apoyo"],
-h_buenos_manc:["Buenos días con mancuerna en el pecho",["femoral", "espalda"],"Fácil: ligera · Difícil: bajada lenta"],
-h_puente_fem:["Puente de femoral con talones en silla",["femoral", "gluteo"],"Fácil: dos piernas · Difícil: una pierna"],
-h_curl_fem_manc:["Curl femoral boca abajo con mancuerna entre los pies",["femoral"],"Fácil: ligera · Difícil: bajada lenta"],
-h_nordico:["Nórdico asistido en el tapete",["femoral"],"Fácil: baja poco · Difícil: baja lento hasta el piso"],
+h_sent:["Sentadilla con peso corporal",["cuadriceps", "gluteo"],"Fácil: baja poco · Difícil: pausa de 2 s abajo"],
+h_goblet:["Sentadilla goblet con mancuerna",["cuadriceps", "gluteo"],"Fácil: mancuerna ligera · Difícil: pausa abajo"],
+h_goblet_kb:["Sentadilla goblet con kettlebell",["cuadriceps", "gluteo"],"Fácil: kettlebell ligera · Difícil: bajada lenta"],
+h_desp_manc:["Desplantes alternados con mancuernas",["cuadriceps", "gluteo"],"Fácil: sin peso · Difícil: mancuernas pesadas"],
+h_desp_rev:["Desplante reverso con mancuernas",["cuadriceps", "gluteo"],"Fácil: sin peso · Difícil: más peso"],
+h_split:["Sentadilla split con mancuernas",["cuadriceps", "gluteo"],"Fácil: sin peso · Difícil: pausa abajo"],
+h_frontal:["Sentadilla frontal con mancuernas en los hombros",["cuadriceps", "gluteo"],"Fácil: ligeras · Difícil: más peso"],
+h_desp_lat_kb:["Desplante lateral con kettlebell",["cuadriceps", "gluteo"],"Fácil: sin peso · Difícil: kettlebell pesada"],
+h_sent_liga:["Sentadilla con liga bajo los pies",["cuadriceps", "gluteo"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_ext_polaina:["Extensión de pierna con polainas sentado en el tapete",["cuadriceps", "gluteo"],"Fácil: polaina ligera · Difícil: pausa arriba"],
+h_isom_manc:["Sentadilla isométrica sostenida con mancuerna",["cuadriceps", "gluteo"],"Fácil: 20 s · Difícil: 45 s"],
+h_salto:["Sentadilla con salto",["cuadriceps", "gluteo"],"Fácil: sin salto · Difícil: salto alto con aterrizaje suave"],
+h_puente:["Puente de glúteo en el tapete",["gluteo", "femoral"],"Fácil: sin peso · Difícil: pausa arriba"],
+h_puente_una:["Puente de glúteo a una pierna",["gluteo", "femoral"],"Fácil: dos piernas · Difícil: una pierna con pausa"],
+h_hip_manc:["Hip thrust en el piso con mancuerna",["gluteo", "femoral"],"Fácil: ligera · Difícil: pesada y pausa"],
+h_patada_pol:["Patada de glúteo con polainas en cuadrupedia",["gluteo", "femoral"],"Fácil: polaina ligera · Difícil: pausa arriba"],
+h_patada_liga:["Patada de glúteo con liga",["gluteo", "femoral"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_abd_pol:["Abducción acostado de lado con polainas",["gluteo", "femoral"],"Fácil: sin polaina · Difícil: polaina pesada"],
+h_abd_liga:["Caminata lateral con liga",["gluteo", "femoral"],"Fácil: liga suave · Difícil: liga en los tobillos"],
+h_almeja:["Almejas con liga",["gluteo", "femoral"],"Fácil: sin liga · Difícil: liga fuerte"],
+h_puente_liga:["Puente de glúteo con liga en las rodillas",["gluteo", "femoral"],"Fácil: liga suave · Difícil: pausa arriba"],
+h_swing_kb:["Swing con kettlebell",["gluteo", "femoral"],"Fácil: kettlebell ligera · Difícil: más peso"],
+h_sumo_kb:["Sentadilla sumo con kettlebell",["gluteo", "femoral"],"Fácil: ligera · Difícil: pausa abajo"],
+h_pmr_manc:["Peso muerto rumano con mancuernas",["femoral", "gluteo"],"Fácil: ligeras · Difícil: bajada lenta de 3 s"],
+h_pm_una_manc:["Peso muerto a una pierna con mancuerna",["femoral", "gluteo"],"Fácil: sin peso · Difícil: más peso"],
+h_pmr_kb:["Peso muerto rumano con kettlebell",["femoral", "gluteo"],"Fácil: ligera · Difícil: pesada"],
+h_curl_pol:["Curl femoral boca abajo con polainas",["femoral", "gluteo"],"Fácil: polaina ligera · Difícil: bajada lenta"],
+h_curl_pol_pie:["Curl femoral de pie con polaina",["femoral", "gluteo"],"Fácil: ligera · Difícil: pausa arriba"],
+h_curl_liga:["Curl femoral boca abajo con liga",["femoral", "gluteo"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_buenos_liga:["Buenos días con liga",["femoral", "gluteo"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_buenos_manc:["Buenos días con mancuerna en el pecho",["femoral", "gluteo"],"Fácil: ligera · Difícil: bajada lenta"],
+h_puente_fem:["Puente de femoral con talones lejos de la cadera",["femoral", "gluteo"],"Fácil: dos piernas · Difícil: una pierna"],
+h_swing_una:["Swing a una mano con kettlebell",["femoral", "gluteo"],"Fácil: ligera · Difícil: más peso"],
 h_pms_manc:["Peso muerto sumo con mancuerna",["femoral", "gluteo"],"Fácil: ligera · Difícil: más peso"],
-h_lag_decl:["Lagartijas declinadas con pies en silla",["pecho", "hombro"],"Fácil: silla baja · Difícil: silla alta"],
-h_ball_incl:["Press inclinado en pelota con mancuernas",["pecho", "hombro"],"Fácil: ligeras · Difícil: más peso"],
+h_lag:["Lagartijas",["pecho", "triceps"],"Fácil: con rodillas · Difícil: pausa abajo"],
+h_lag_rod:["Lagartijas con rodillas en el tapete",["pecho", "triceps"],"Fácil: rango corto · Difícil: bajada lenta"],
+h_lag_ab:["Lagartijas con manos abiertas",["pecho", "triceps"],"Fácil: con rodillas · Difícil: bajada de 3 s"],
 h_lag_pausa:["Lagartijas con pausa abajo",["pecho", "triceps"],"Fácil: con rodillas · Difícil: completas"],
+h_lag_manc:["Lagartijas con manos sobre mancuernas",["pecho", "triceps"],"Fácil: con rodillas · Difícil: bajando más"],
+h_press_piso:["Press de pecho en el piso con mancuernas",["pecho", "triceps"],"Fácil: ligeras · Difícil: pausa abajo"],
+h_aper_manc:["Aperturas en el piso con mancuernas",["pecho", "triceps"],"Fácil: ligeras · Difícil: bajada lenta"],
 h_squeeze:["Squeeze press con mancuernas en el piso",["pecho", "triceps"],"Fácil: ligeras · Difícil: más peso"],
+h_press_kb:["Press de pecho en el piso con kettlebell",["pecho", "triceps"],"Fácil: ligera · Difícil: más peso"],
+h_press_liga:["Press de pecho con liga",["pecho", "triceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_aper_liga:["Aperturas con liga",["pecho", "triceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_dominadas:["Dominadas en barra",["espalda", "biceps"],"Fácil: con liga de asistencia · Difícil: lentas"],
+h_dom_liga:["Dominadas asistidas con liga",["espalda", "biceps"],"Fácil: liga fuerte · Difícil: liga suave"],
+h_dom_neg:["Dominadas negativas (bajada lenta)",["espalda", "biceps"],"Fácil: 3 s · Difícil: 6 s"],
 h_remo_dos:["Remo inclinado con dos mancuernas",["espalda", "biceps"],"Fácil: ligeras · Difícil: pausa arriba"],
-h_renegado:["Remo renegado en el tapete",["espalda", "abdomen"],"Fácil: rodillas apoyadas · Difícil: piernas estiradas"],
-h_ball_super:["Superman sobre la pelota",["espalda"],"Fácil: brazos cortos · Difícil: brazos estirados"],
-h_ytw:["Y-T-W boca abajo en el tapete",["espalda", "hombro"],"Fácil: sin peso · Difícil: con botellas"],
-h_remo_toalla:["Remo con toalla en el marco de una puerta",["espalda", "biceps"],"Fácil: cuerpo vertical · Difícil: más inclinado"],
-h_arnold:["Press Arnold con mancuernas",["hombro", "triceps"],"Fácil: sentado · Difícil: de pie"],
-h_front_manc:["Elevación frontal alterna con mancuernas",["hombro"],"Fácil: ligeras · Difícil: bajada lenta"],
-h_ball_pajaros:["Pájaros boca abajo sobre la pelota",["hombro", "espalda"],"Fácil: ligeras · Difícil: pausa arriba"],
-h_menton:["Remo al mentón con mancuernas",["hombro", "trapecio"],"Fácil: ligeras · Difícil: más peso"],
-h_ball_curl_inc:["Curl inclinado recargado en la pelota",["biceps"],"Fácil: ligeras · Difícil: bajada lenta"],
-h_curl21:["Curl 21 con mancuernas",["biceps"],"Fácil: ligeras · Difícil: más peso"],
+h_remo_manc:["Remo a una mano con mancuerna en desplante",["espalda", "biceps"],"Fácil: ligera · Difícil: pausa arriba"],
+h_remo_kb:["Remo inclinado con kettlebell",["espalda", "biceps"],"Fácil: ligera · Difícil: más peso"],
+h_renegado:["Remo renegado con mancuernas en el tapete",["espalda", "biceps"],"Fácil: rodillas apoyadas · Difícil: piernas estiradas"],
+h_jalon_liga:["Jalón con liga sujeta a la barra de dominadas",["espalda", "biceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_remo_liga:["Remo sentado con liga",["espalda", "biceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_pull_manc:["Pullover en el piso con mancuerna",["espalda", "biceps"],"Fácil: ligera · Difícil: bajada lenta"],
+h_superman:["Superman en el tapete",["espalda", "biceps"],"Fácil: solo brazos · Difícil: brazos y piernas con pausa"],
+h_press_manc:["Press de hombro con mancuernas",["hombro", "triceps"],"Fácil: sentado en el tapete · Difícil: de pie"],
+h_arnold:["Press Arnold con mancuernas",["hombro", "triceps"],"Fácil: ligeras · Difícil: más peso"],
+h_lat_manc:["Elevaciones laterales con mancuernas",["hombro", "triceps"],"Fácil: ligeras · Difícil: bajada lenta"],
+h_front_manc:["Elevación frontal con mancuernas",["hombro", "triceps"],"Fácil: ligeras · Difícil: alterna con pausa"],
+h_pajaros:["Pájaros inclinado con mancuernas",["hombro", "triceps"],"Fácil: ligeras · Difícil: pausa arriba"],
+h_menton:["Remo al mentón con mancuernas",["hombro", "triceps"],"Fácil: ligeras · Difícil: más peso"],
+h_press_kb_h:["Press de hombro con kettlebell",["hombro", "triceps"],"Fácil: ligera · Difícil: más peso"],
+h_lat_liga:["Elevaciones laterales con liga",["hombro", "triceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_facepull:["Face pull con liga",["hombro", "triceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_pike:["Lagartija pica (pike) en el tapete",["hombro", "triceps"],"Fácil: poca inclinación · Difícil: más inclinación"],
+h_ytw:["Y-T-W boca abajo con mancuernas ligeras",["hombro", "triceps"],"Fácil: sin peso · Difícil: con mancuernas"],
+h_curl_manc:["Curl de bíceps con mancuernas",["biceps", "antebrazo"],"Fácil: alterno · Difícil: los dos brazos y bajada lenta"],
+h_martillo:["Curl martillo con mancuernas",["biceps", "antebrazo"],"Fácil: ligeras · Difícil: más peso"],
+h_curl_conc:["Curl concentrado de rodillas en el tapete",["biceps", "antebrazo"],"Fácil: ligera · Difícil: pausa arriba"],
 h_zottman:["Curl Zottman con mancuernas",["biceps", "antebrazo"],"Fácil: ligeras · Difícil: bajada lenta"],
-h_curl_pausa:["Curl con pausa a la mitad",["biceps"],"Fácil: pausa 1 s · Difícil: pausa 3 s"],
-h_press_cerr:["Press cerrado con mancuernas en el piso",["triceps", "pecho"],"Fácil: ligeras · Difícil: más peso"],
-h_fondos_elev:["Fondos en silla con pies elevados",["triceps"],"Fácil: pies en el piso · Difícil: pies en otra silla"],
-h_skull:["Extensión de tríceps acostado con mancuernas",["triceps"],"Fácil: ligeras · Difícil: bajada lenta"],
-h_ext_una:["Extensión a una mano tras nuca con mancuerna",["triceps"],"Fácil: ligera · Difícil: más peso"],
-h_lag_cerr_rod:["Lagartija cerrada con rodillas apoyadas",["triceps", "pecho"],"Fácil: inclinada en la mesa · Difícil: en el piso"],
+h_curl21:["Curl 21 con mancuernas",["biceps", "antebrazo"],"Fácil: ligeras · Difícil: más peso"],
+h_curl_liga:["Curl con liga",["biceps", "antebrazo"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_curl_kb:["Curl con kettlebell",["biceps", "antebrazo"],"Fácil: ligera · Difícil: más peso"],
+h_martillo_cruz:["Curl martillo cruzado",["biceps", "antebrazo"],"Fácil: ligera · Difícil: bajada lenta"],
+h_chinup:["Dominadas con agarre supino (chin-ups)",["biceps", "antebrazo"],"Fácil: con liga · Difícil: lentas"],
+h_curl_pausa:["Curl con pausa a la mitad",["biceps", "antebrazo"],"Fácil: 1 s · Difícil: 3 s"],
+h_ext_manc:["Extensión de tríceps tras nuca con mancuerna",["triceps"],"Fácil: ligera · Difícil: más peso"],
+h_ext_una:["Extensión a una mano tras nuca",["triceps"],"Fácil: ligera · Difícil: más peso"],
+h_patada_tri:["Patada de tríceps con mancuerna",["triceps"],"Fácil: ligera · Difícil: pausa atrás"],
+h_skull:["Extensión acostado con mancuernas en el tapete",["triceps"],"Fácil: ligeras · Difícil: bajada lenta"],
+h_press_cerr:["Press cerrado con mancuernas en el piso",["triceps"],"Fácil: ligeras · Difícil: más peso"],
+h_lag_diam:["Lagartijas diamante",["triceps"],"Fácil: con rodillas · Difícil: completas"],
+h_lag_cerr_rod:["Lagartija cerrada con rodillas en el tapete",["triceps"],"Fácil: rango corto · Difícil: bajada lenta"],
+h_ext_liga:["Extensión de tríceps con liga",["triceps"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_fondos_piso:["Fondos en el piso con manos atrás",["triceps"],"Fácil: rodillas dobladas · Difícil: piernas estiradas"],
+h_ext_kb:["Extensión tras nuca con kettlebell",["triceps"],"Fácil: ligera · Difícil: más peso"],
+h_muneca:["Curl de muñeca con mancuerna",["antebrazo"],"Fácil: ligera · Difícil: más peso"],
+h_muneca_inv:["Curl de muñeca inverso con mancuerna",["antebrazo"],"Fácil: ligera · Difícil: bajada lenta"],
 h_rot_muneca:["Rotación de muñeca con mancuerna",["antebrazo"],"Fácil: ligera · Difícil: más peso"],
-h_granjero_una:["Caminata del granjero con una mancuerna",["antebrazo", "abdomen"],"Fácil: 30 s · Difícil: 60 s"],
-h_pinza_libros:["Sostener libros o discos con pinza",["antebrazo"],"Fácil: 20 s · Difícil: 45 s"],
-h_exprimir:["Exprimir una pelota pequeña",["antebrazo"],"Fácil: suave · Difícil: con fuerza"],
-h_talones_una_manc:["Talones a una pierna en escalón con mancuerna",["pantorrilla"],"Fácil: sin peso · Difícil: con mancuerna"],
-h_cuerda_suave:["Saltos suaves con cuerda en puntas",["pantorrilla", "cardio"],"Fácil: 20 s · Difícil: 45 s"],
-h_puntitas:["Caminata de puntitas con mancuernas",["pantorrilla"],"Fácil: sin peso · Difícil: con mancuernas"],
-h_talones_iso:["Isometría de talones arriba",["pantorrilla"],"Fácil: 20 s · Difícil: 45 s a una pierna"],
+h_granjero:["Caminata del granjero con mancuernas",["antebrazo"],"Fácil: 30 s · Difícil: 60 s pesado"],
+h_granjero_kb:["Caminata con kettlebell a un lado",["antebrazo"],"Fácil: 30 s · Difícil: 60 s"],
+h_colgarse:["Colgarse de la barra de dominadas",["antebrazo"],"Fácil: 15 s · Difícil: 45 s"],
+h_agarre:["Agarre estático con mancuernas pesadas",["antebrazo"],"Fácil: 20 s · Difícil: 45 s"],
+h_curl_inv:["Curl invertido con mancuernas",["antebrazo"],"Fácil: ligeras · Difícil: más peso"],
+h_bottomsup:["Kettlebell boca abajo (bottoms-up)",["antebrazo"],"Fácil: 15 s · Difícil: 30 s por mano"],
+h_talones:["Elevación de talones de pie",["pantorrilla"],"Fácil: dos piernas · Difícil: pausa arriba"],
+h_talones_manc:["Elevación de talones con mancuernas",["pantorrilla"],"Fácil: ligeras · Difícil: más peso"],
+h_talones_una:["Elevación de talones a una pierna con mancuerna",["pantorrilla"],"Fácil: sin peso · Difícil: con mancuerna"],
 h_talones_pausa:["Elevación de talones con pausa de 2 s arriba",["pantorrilla"],"Fácil: dos piernas · Difícil: una pierna"],
+h_talones_iso:["Isometría de talones arriba",["pantorrilla"],"Fácil: 20 s · Difícil: 45 s a una pierna"],
+h_puntitas:["Caminata de puntitas con mancuernas",["pantorrilla"],"Fácil: sin peso · Difícil: con mancuernas"],
+h_saltos:["Saltos en puntas",["pantorrilla"],"Fácil: pequeños · Difícil: rápidos y continuos"],
+h_talones_kb:["Elevación de talones con kettlebell",["pantorrilla"],"Fácil: ligera · Difícil: pesada"],
+h_talones_liga:["Flexión de tobillo con liga sentado en el tapete",["pantorrilla"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_plancha_lat:["Plancha lateral en el tapete",["abdomen"],"Fácil: rodillas apoyadas · Difícil: piernas estiradas"],
+h_dead_bug:["Dead bug (bicho muerto)",["abdomen"],"Fácil: solo piernas · Difícil: brazos y piernas"],
 h_crunch_inv:["Crunch inverso en el tapete",["abdomen"],"Fácil: rodillas dobladas · Difícil: piernas estiradas"],
+h_rod_barra:["Elevación de rodillas colgado de la barra",["abdomen"],"Fácil: rodillas dobladas · Difícil: piernas estiradas"],
+h_crunch_liga:["Crunch con liga sujeta a la barra",["abdomen"],"Fácil: liga suave · Difícil: liga fuerte"],
+h_piernas_pol:["Elevación de piernas con polainas en el tapete",["abdomen"],"Fácil: sin polaina · Difícil: con polaina"],
 h_jj:["Jumping jacks",["cardio"],"Fácil: sin salto, paso lateral · Difícil: rápidos"],
 h_trote:["Trote en el lugar",["cardio"],"Fácil: caminando rápido · Difícil: rodillas arriba"],
-h_burpee:["Burpees",["cardio","pecho"],"Fácil: sin salto ni lagartija · Difícil: completos"]
+h_burpee:["Burpees",["cardio"],"Fácil: sin salto ni lagartija · Difícil: completos"]
 };
 Object.keys(EXH).forEach(k=>{EX[k]=[EXH[k][0],EXH[k][1],[]]});
 const HLIGA=new Set(Object.keys(EXH).filter(k=>EXH[k][3]));
-const HTIME={h_isom_manc:1,h_granjero_una:1,h_pinza_libros:1,h_cuerda_suave:1,h_talones_iso:1,h_agarre:1,h_isom:1,h_plancha_lat:1,h_saltos:1,h_granjero:1,h_toalla:1,h_jj:1,h_trote:1,h_curl_iso:1,plancha:1,mountain:1};
-const HG={
-pierna:[["h_sent","h_goblet"],["h_desp","h_desp_manc"],["h_bulg"],["h_isom","h_step"],["h_salto","h_sumo"],["h_step"]],
-gluteo:[["h_puente","h_hip_manc"],["h_sumo","h_ball_puente"],["h_patada"],["h_puente_una"],["h_almeja","h_abd_liga"],["h_bulg"]],
-femoral:[["h_pmr","h_pmr_manc"],["h_ball_curl"],["h_curl_toalla"],["h_pm_una"],["h_buenos_liga","h_puente_una"]],
-pecho:[["h_press_piso","h_lag","h_ball_press"],["h_lag_inc"],["h_aper","h_aper_manc"],["h_lag_ab"]],
-espalda:[["h_remo","h_remo_manc"],["h_superman","h_pull_manc"],["h_remo_una","h_remo_mesa"],["h_jalon_liga","h_pajaros"]],
-hombro:[["h_press_hombro","h_press_manc"],["h_lat","h_lat_manc"],["h_pike","h_front"],["h_pajaros"]],
-biceps:[["h_curl","h_curl_manc"],["h_martillo"],["h_curl_liga","h_curl_iso"]],
-triceps:[["h_fondos"],["h_lag_diam"],["h_tras_nuca","h_patada_tri","h_ext_manc"]],
-abdomen:[["plancha","h_ball_plancha"],["crunch","h_ball_crunch"],["bicicleta","h_dead_bug"],["h_plancha_lat"],["mountain","elev_piernas"]],
-pantorrilla:[["h_talones","h_talones_manc"],["h_talones_una"],["h_saltos"]],
-antebrazo:[["h_granjero"],["h_muneca"],["h_toalla"]]
-};
+const HTIME={h_isom_manc:1,h_granjero:1,h_granjero_kb:1,h_colgarse:1,h_agarre:1,h_bottomsup:1,h_talones_iso:1,h_saltos:1,h_plancha_lat:1,h_jj:1,h_trote:1,plancha:1,mountain:1};
+const HG={pierna:[],gluteo:[],femoral:[],pecho:[],espalda:[],hombro:[],biceps:[],triceps:[],abdomen:[],pantorrilla:[],antebrazo:[]};
 const LUGAR=i=>i.lugar||"gym";
 const LV={prin:{n:"Principiante",r:2,reps:"10–12",t:"20 s"},inter:{n:"Intermedio",r:3,reps:"12–15",t:"30 s"},av:{n:"Avanzado",r:4,reps:"15–20",t:"40 s"}};
 const ZONES_H={sup:{t:"Tren superior",g:["pecho","espalda","hombro","biceps","triceps","antebrazo","abdomen"]},inf:{t:"Tren inferior",g:["pierna","gluteo","femoral","pantorrilla"]},car:{t:"Cardio y deporte",g:["cardio_casa","spinning","escaleras","sombra","correr"]}};
 G.cardio_casa={t:"Cardio en casa",s:"Sin equipo",out:true};
-function homeAllowed(id,info){return !HLIGA.has(id)}
+function homeAllowed(id,info){return true}
 const HABS=["plancha","crunch","bicicleta","mountain","elev_piernas","giros_rusos","plancha_toque"];
-function HPOOL(g){const m=(GM[g]||[g])[0];return [...Object.keys(EXH).filter(k=>EXH[k][1][0]===m&&!HLIGA.has(k)),...(g==="abdomen"?HABS.filter(k=>EX[k]&&EX[k][1][0]==="abdomen"):[])]}
+function HPOOL(g){const m=(GM[g]||[g])[0];return [...Object.keys(EXH).filter(k=>EXH[k][1][0]===m),...(g==="abdomen"?HABS.filter(k=>EX[k]&&EX[k][1][0]==="abdomen"):[])]}
 function homePick(plan,info){
   const r=rng(hash("casa|"+plan.map(x=>x.g).join("+")+"|"+blockIdx+"|"+S.cur));const used=new Set();
   return plan.map(x=>{const pool=HPOOL(x.g).filter(e=>!used.has(e));const sh=[...pool].sort(()=>r()-.5);
@@ -1015,7 +999,7 @@ function homeOut(gk,time,lv,home){
 }
 function renderNoTrain(){
   const i=I(),mins=+i.caminata||30,lv=i.nivel||"prin";
-  const opt=["h_sent","h_lag_inc","h_puente","h_remo","plancha"];
+  const opt=["h_sent","h_lag_rod","h_puente","h_superman","plancha"];
   $("#v-entrenar").innerHTML=`<div class="hero glass"><div class="k">Tu movimiento de hoy</div><h1>Caminata de ${mins} min</h1><p>A paso rápido, de forma que puedas hablar pero no cantar. Puedes repartirla en 2 o 3 ratos del día. Al terminar, márcalo en Hábitos.</p></div>
   <div class="rule glass">Moverte todos los días ayuda a cumplir tu meta, aunque no entrenes. Si algún día te animas, aquí tienes una rutina corta.</div>
   <div class="glass block"><div class="bhead"><h3>Rutina opcional de 15 minutos</h3><span>2 vueltas · descansa 60 s al terminar cada vuelta</span></div>
@@ -1046,7 +1030,7 @@ function renderHomeTrain(){
     <div class="holo-grid"><div class="holo" id="holo"><div class="holo-in">${anatomy(sex,selMuscles(strG),true)}</div><div class="scan" aria-hidden="true"></div></div>
     <div class="mlist">${ZONES_H[TS.zone].g.map(k=>`<button class="mbtn" data-g="${k}" aria-pressed="${TS.groups.includes(k)}"><b>${G[k].t}</b><small>${G[k].s}</small></button>`).join("")}</div></div>
     <div class="selrow"><span class="small">Vas a entrenar:</span>${TS.groups.map(g=>`<button class="selchip" data-rm="${g}" aria-label="Quitar ${esc(G[g].t)}">${esc(G[g].t)} <span aria-hidden="true">×</span></button>`).join("")}${TS.groups.length>1?`<button class="xv" data-clear="1">Quitar todo</button>`:""}</div>
-    <p class="small" style="margin:8px 0 0">Combina libremente: músculos de fuerza y una opción de cardio. Equipo en casa: bicicleta estática, mancuernas, tapete, pelota, cuerda y tu peso.</p>
+    <p class="small" style="margin:8px 0 0">Combina libremente: músculos de fuerza y una opción de cardio. Fuerza en casa con mancuernas, ligas, kettlebell, barra de dominadas, tapete y polainas. Cardio con bicicleta estática.</p>
   </div>
   <div class="sec"><h2>¿Cuánto tiempo tienes?</h2></div><div class="chips" role="group" aria-label="Tiempo en casa">${[30,45,60].map(t=>`<button class="chip" data-th="${t}" aria-pressed="${t===T}">${t} min</button>`).join("")}</div>`;
   const motiv=MOTIV[(dayIdx+hash(TS.groups.join("+")))%MOTIV.length];
@@ -1096,7 +1080,7 @@ function renderHomeTrain(){
   html+=`<div class="meta"><span>Rutina: <b>${esc(TS.groups.map(g=>G[g].t).join(" + "))}</b></span><span>Duración: <b>${T} min</b></span></div>
   <div class="card glass" style="padding:12px 14px"><div class="small" style="margin-bottom:6px">Reparto del tiempo</div><div class="chips" style="margin:0"><span class="tag" style="margin:0">Calentamiento 3 min</span>${timeTags}${C?`<span class="tag" style="margin:0">${esc(G[cardG].t)} · ${C} min</span>`:""}<span class="tag" style="margin:0">Estiramiento 3 min</span></div></div>
   <div class="motiv"><small>Antes de empezar</small>${esc(motiv)}</div>
-  <div class="rule glass">${st.modeCasa==="fuerza"?`Mismas reglas que en el gimnasio: sin pausa entre ejercicios y 60–90 s de descanso al terminar cada bloque. 3 o 4 series de ${reps} repeticiones; solo el ejercicio principal va en bloques de 10 + 10 + 10.`:`Circuito: todos los ejercicios seguidos, ${LV[lv].r} vueltas; descansa 60–90 s al terminar cada vuelta.`} Usa mancuernas, pelota, tapete o tu peso corporal.</div>
+  <div class="rule glass">${st.modeCasa==="fuerza"?`Mismas reglas que en el gimnasio: sin pausa entre ejercicios y 60–90 s de descanso al terminar cada bloque. 3 o 4 series de ${reps} repeticiones; solo el ejercicio principal va en bloques de 10 + 10 + 10.`:`Circuito: todos los ejercicios seguidos, ${LV[lv].r} vueltas; descansa 60–90 s al terminar cada vuelta.`} Usa mancuernas, ligas, kettlebell, barra de dominadas, tapete o polainas.</div>
   <div class="glass block"><div class="bhead"><h3>Calentamiento</h3><span>3 min</span></div>${fixedEx("Movilidad y jumping jacks suaves",["cardio"],"3 min: hombros, cadera, tobillos y 1 min de jumping jacks","Ejercicio 1")}</div>`+blocksH;
   if(cardG){const cp=homeOut(cardG,C+8,lv,true).filter(b=>!/Calentamiento|Enfriamiento|Progresión|Cuerda|Core|Remate|Estiramiento/.test(b.h));
     html+=`<div class="sec"><h2>${esc(G[cardG].t)} · ${C} min</h2></div>`+outBlocksHTML(cp,TS.cur.length,n);}
@@ -1135,7 +1119,7 @@ function cardioPlan(gk,T,lv,home){
 
 /* ---------- Más rutinas de cardio en casa (rotan cada día) ---------- */
 const HC_MOVES0=[["Jumping jacks",["cardio"]],["Trote en el lugar",["cardio"]],["Rodillas arriba",["cardio","abdomen"]],["Talones al glúteo",["cardio","femoral"]],["Patinador (skaters)",["gluteo","cardio"]],["Burpees",["cardio","pecho"]],["Mountain climbers",["abdomen","cardio"]],["Sentadilla con salto",["cuadriceps","cardio"]],["Desplante con salto",["cuadriceps","gluteo"]],["Saltos laterales",["pantorrilla","cardio"]],["Plank jacks",["abdomen","hombro"]],["Golpes de sombra rápidos",["hombro","cardio"]]];
-const HC_LOW0=[["Marcha rápida en el lugar",["cardio"]],["Step touch (paso lateral con brazos)",["cardio"]],["Sentadilla a la silla",["cuadriceps","gluteo"]],["Golpes al aire alternados",["hombro","cardio"]],["Rodilla al codo de pie",["abdomen","cardio"]],["Curl de pierna de pie",["femoral"]],["Elevación lateral de pierna de pie",["gluteo"]],["Marcha con brazos arriba",["hombro","cardio"]]];
+const HC_LOW0=[["Marcha rápida en el lugar",["cardio"]],["Step touch (paso lateral con brazos)",["cardio"]],["Sentadilla al aire",["cuadriceps","gluteo"]],["Golpes al aire alternados",["hombro","cardio"]],["Rodilla al codo de pie",["abdomen","cardio"]],["Curl de pierna de pie",["femoral"]],["Elevación lateral de pierna de pie",["gluteo"]],["Marcha con brazos arriba",["hombro","cardio"]]];
 const HC_MOVES=HC_MOVES0.map((m,i)=>{const id="hc_"+i;EX[id]=[m[0],m[1],[]];return [m[0],m[1],null,id]});
 const HC_LOW=HC_LOW0.map((m,i)=>{const id="hcl_"+i;EX[id]=[m[0],m[1],[]];return [m[0],m[1],null,id]});
 G.tabata={t:"Tabata",s:"20 s fuerte / 10 s descanso",out:true};
